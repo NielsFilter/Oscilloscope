@@ -1,0 +1,11 @@
+C:\Personal\Dev\Robonii\Robonii\bin\Debug\Robonii.exe
+C:\Personal\Dev\Robonii\Robonii\bin\Debug\Robonii.pdb
+C:\Personal\Dev\Robonii\Robonii\bin\Debug\Robonii.xml
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.frmFFT.resources
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.MainForm.resources
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.frmOscilloscope.resources
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.Resources.resources
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.vbproj.GenerateResource.Cache
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.exe
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.xml
+C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.pdb
