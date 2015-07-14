@@ -108,7 +108,6 @@
                     End If
 
                 Case 2 'Packet Type
-                    'TODO: See if theres a dynamic way to incorporate HexCode attribute
                     If currentByte = &H53 Then
                         cmd = New OscilloscopeCommand()
                         offset += 1
@@ -154,7 +153,9 @@
 
                 Case 14 'Data Stream Length
                     'TODO: current byte must be 2 lengths
-                    cmd.DataStreamLength = currentByte
+                    Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
+                    cmd.DataStreamLength = currentByte << 8 Or nextByte
+
                     offset += BaseCommand.DATASTREAMBYTE_LENGTH
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
 
@@ -181,11 +182,12 @@
                         cmd.Data = New List(Of Byte)()
                     End If
 
-                    cmd.Data.AddRange(bytes.Skip(startPosition).Take(20))
+                    cmd.Data.AddRange(bytes.Skip(startPosition).Take(cmd.DataStreamLength)) 'TODO: This might be broken up, so we must cmd.DataStreamLength
 
                     offset += 1
                 Case Else
                     If offset > 19 Then '// TODO: Work out which byte is the actual CRC
+                        offset = 1
                         cmd.DoneBuildingCommand()
                     End If
             End Select

@@ -76,8 +76,6 @@ Public Class SerialConnection
 
 #End Region
 
-    'Private lastByte As Byte
-    'Private lstValidByte As New List(Of Byte)
     Private WithEvents incomingCmd As BaseCommand
     Private isComplete As Boolean
     Private offset As Integer
@@ -89,14 +87,6 @@ Public Class SerialConnection
         Dim comBuffer As Byte() = New Byte(n - 1) {}
         mySerialPort.Read(comBuffer, 0, n)
 
-        ''Send byte buffer is loaded
-        'If lstValidByte.Count = 0 Then
-        '    Me.resetCommand()
-        'Else
-        '    'Busy building up a command
-        'End If
-
-        'Searching for the header bytes
         For i = 0 To comBuffer.Length - 1
             If Me.isComplete = True Then
                 Exit For 'TODO: Implement multiple commands following another.
@@ -120,8 +110,11 @@ Public Class SerialConnection
 #Region " IDisposable Members "
 
     Public Sub Dispose() Implements IDisposable.Dispose
-        If Me.mySerialPort.IsOpen Then
-            Me.mySerialPort.Close()
+        If Me.mySerialPort IsNot Nothing Then
+            RemoveHandler mySerialPort.DataReceived, AddressOf ReceiveSerialBytes
+            If Me.mySerialPort.IsOpen Then
+                Me.mySerialPort.Close()
+            End If
             Me.mySerialPort.Dispose()
         End If
     End Sub

@@ -22,9 +22,10 @@ Partial Class frmOscilloscope
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim ChartArea3 As System.Windows.Forms.DataVisualization.Charting.ChartArea = New System.Windows.Forms.DataVisualization.Charting.ChartArea()
-        Dim Legend3 As System.Windows.Forms.DataVisualization.Charting.Legend = New System.Windows.Forms.DataVisualization.Charting.Legend()
+        Dim ChartArea1 As System.Windows.Forms.DataVisualization.Charting.ChartArea = New System.Windows.Forms.DataVisualization.Charting.ChartArea()
+        Dim Legend1 As System.Windows.Forms.DataVisualization.Charting.Legend = New System.Windows.Forms.DataVisualization.Charting.Legend()
         Me.pnlConfig = New System.Windows.Forms.Panel()
+        Me.btnClearGraph = New System.Windows.Forms.Button()
         Me.gbChannel3 = New System.Windows.Forms.GroupBox()
         Me.nudZeroLine3 = New System.Windows.Forms.NumericUpDown()
         Me.Label10 = New System.Windows.Forms.Label()
@@ -43,7 +44,8 @@ Partial Class frmOscilloscope
         Me.nudZeroLine1 = New System.Windows.Forms.NumericUpDown()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.chtOscilloscope = New System.Windows.Forms.DataVisualization.Charting.Chart()
-        Me.btnClearGraph = New System.Windows.Forms.Button()
+        Me.txtName = New System.Windows.Forms.TextBox()
+        Me.btnUpdateName = New System.Windows.Forms.Button()
         Me.pnlConfig.SuspendLayout()
         Me.gbChannel3.SuspendLayout()
         CType(Me.nudZeroLine3, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -66,6 +68,17 @@ Partial Class frmOscilloscope
         Me.pnlConfig.Name = "pnlConfig"
         Me.pnlConfig.Size = New System.Drawing.Size(249, 760)
         Me.pnlConfig.TabIndex = 2
+        '
+        'btnClearGraph
+        '
+        Me.btnClearGraph.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnClearGraph.Location = New System.Drawing.Point(6, 725)
+        Me.btnClearGraph.Name = "btnClearGraph"
+        Me.btnClearGraph.Size = New System.Drawing.Size(233, 23)
+        Me.btnClearGraph.TabIndex = 16
+        Me.btnClearGraph.Text = "Clear All"
+        Me.btnClearGraph.UseVisualStyleBackColor = True
         '
         'gbChannel3
         '
@@ -175,6 +188,8 @@ Partial Class frmOscilloscope
         '
         Me.gbChannel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.gbChannel1.Controls.Add(Me.btnUpdateName)
+        Me.gbChannel1.Controls.Add(Me.txtName)
         Me.gbChannel1.Controls.Add(Me.Label6)
         Me.gbChannel1.Controls.Add(Me.cmbCOM1)
         Me.gbChannel1.Controls.Add(Me.nudTrigger1)
@@ -245,29 +260,34 @@ Partial Class frmOscilloscope
         '
         'chtOscilloscope
         '
-        ChartArea3.AxisX.IsStartedFromZero = False
-        ChartArea3.AxisY.IsStartedFromZero = False
-        ChartArea3.Name = "ChartArea1"
-        Me.chtOscilloscope.ChartAreas.Add(ChartArea3)
+        ChartArea1.AxisX.IsStartedFromZero = False
+        ChartArea1.AxisY.IsStartedFromZero = False
+        ChartArea1.Name = "ChartArea1"
+        Me.chtOscilloscope.ChartAreas.Add(ChartArea1)
         Me.chtOscilloscope.Dock = System.Windows.Forms.DockStyle.Fill
-        Legend3.Name = "Legend1"
-        Me.chtOscilloscope.Legends.Add(Legend3)
+        Legend1.Name = "Legend1"
+        Me.chtOscilloscope.Legends.Add(Legend1)
         Me.chtOscilloscope.Location = New System.Drawing.Point(0, 0)
         Me.chtOscilloscope.Name = "chtOscilloscope"
         Me.chtOscilloscope.Size = New System.Drawing.Size(829, 760)
         Me.chtOscilloscope.TabIndex = 3
         Me.chtOscilloscope.Text = "Oscilloscope"
         '
-        'btnClearGraph
+        'txtName
         '
-        Me.btnClearGraph.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClearGraph.Location = New System.Drawing.Point(6, 725)
-        Me.btnClearGraph.Name = "btnClearGraph"
-        Me.btnClearGraph.Size = New System.Drawing.Size(233, 23)
-        Me.btnClearGraph.TabIndex = 16
-        Me.btnClearGraph.Text = "Clear All"
-        Me.btnClearGraph.UseVisualStyleBackColor = True
+        Me.txtName.Location = New System.Drawing.Point(10, 98)
+        Me.txtName.Name = "txtName"
+        Me.txtName.Size = New System.Drawing.Size(74, 20)
+        Me.txtName.TabIndex = 11
+        '
+        'btnUpdateName
+        '
+        Me.btnUpdateName.Location = New System.Drawing.Point(90, 98)
+        Me.btnUpdateName.Name = "btnUpdateName"
+        Me.btnUpdateName.Size = New System.Drawing.Size(113, 23)
+        Me.btnUpdateName.TabIndex = 12
+        Me.btnUpdateName.Text = "Update Name"
+        Me.btnUpdateName.UseVisualStyleBackColor = True
         '
         'frmOscilloscope
         '
@@ -313,4 +333,6 @@ Partial Class frmOscilloscope
     Friend WithEvents Label9 As System.Windows.Forms.Label
     Friend WithEvents Label6 As System.Windows.Forms.Label
     Friend WithEvents btnClearGraph As System.Windows.Forms.Button
+    Friend WithEvents btnUpdateName As System.Windows.Forms.Button
+    Friend WithEvents txtName As System.Windows.Forms.TextBox
 End Class

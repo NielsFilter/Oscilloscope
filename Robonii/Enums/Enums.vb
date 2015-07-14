@@ -1,4 +1,7 @@
 ﻿Public Enum PacketTypes
+    <HexCode(0)>
+    None '0x00
+
     <HexCode(&H53)>
     Oscilloscope '0x53 = S in ASCII
 

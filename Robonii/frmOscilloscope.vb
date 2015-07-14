@@ -56,7 +56,7 @@ Public Class frmOscilloscope
                                        '// Get the last X Value for the current series.
                                        Dim lastXCoordinate = 0
                                        If dataSeries.Points.Count > 0 Then
-                                           lastXCoordinate = dataSeries.Points.FindMaxByValue().XValue
+                                           lastXCoordinate = dataSeries.Points.Max(Function(p) p.XValue)
                                        End If
 
                                        '// Plot each point
@@ -139,17 +139,8 @@ Public Class frmOscilloscope
         '// Primary channel has a few extra columns to clear out.
         Me.nudTrigger1.Value = 0
 
-        If device1 IsNot Nothing Then
-            device1.Dispose()
-        End If
-
-
         '// Reset the channel
-        Me.ResetChannel(1, oldCOMPort1, nudZeroLine1, cmbCOM1)
-
-        If cmbCOM1.SelectedIndex > 0 Then
-            Me.connectDevice(device1, 1, cmbCOM1.SelectedValue)
-        End If
+        Me.ResetChannel(1, device1, oldCOMPort1, nudZeroLine1, cmbCOM1)
     End Sub
     Private Sub COM2_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCOM2.SelectedIndexChanged
         If Me.isLoading Then
@@ -172,11 +163,7 @@ Public Class frmOscilloscope
         End If
 
         '// Reset the channel
-        Me.ResetChannel(2, oldCOMPort2, nudZeroLine2, cmbCOM2)
-
-        If cmbCOM2.SelectedIndex > 0 Then
-            Me.connectDevice(device2, 2, cmbCOM2.SelectedValue)
-        End If
+        Me.ResetChannel(2, device2, oldCOMPort2, nudZeroLine2, cmbCOM2)
     End Sub
     Private Sub COM3_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCOM3.SelectedIndexChanged
         If Me.isLoading Then
@@ -199,14 +186,14 @@ Public Class frmOscilloscope
         End If
 
         '// Reset the channel
-        Me.ResetChannel(3, oldCOMPort3, nudZeroLine3, cmbCOM3)
-
-        If cmbCOM3.SelectedIndex > 0 Then
-            Me.connectDevice(device3, 3, cmbCOM3.SelectedValue)
-        End If
+        Me.ResetChannel(3, device3, oldCOMPort3, nudZeroLine3, cmbCOM3)
     End Sub
 
-    Private Sub ResetChannel(channel As Integer, ByRef oldCOMPort As String, zeroLineValue As NumericUpDown, cmbCOM As ComboBox)
+    Private Sub ResetChannel(channel As Integer, ByRef device As SerialConnection, ByRef oldCOMPort As String, zeroLineValue As NumericUpDown, cmbCOM As ComboBox)
+        If device IsNot Nothing Then
+            device.Dispose()
+        End If
+
         '// Reset COM configuration
         zeroLineValue.Value = 0
 
@@ -229,6 +216,10 @@ Public Class frmOscilloscope
 
         '// Update the old COM Port to the current one
         oldCOMPort = cmbCOM.SelectedValue.ToString()
+
+        If cmbCOM.SelectedIndex > 0 Then
+            Me.connectDevice(device, channel, cmbCOM.SelectedValue)
+        End If
     End Sub
 
 #End Region
@@ -328,86 +319,15 @@ Public Class frmOscilloscope
         cmbCOM3.SelectedIndex = 0
     End Sub
 
-    'TODO: REMOVE DUMMY DATA
-    '#Region "Dummy Data"
-    '    Private Sub startData1(channel As Object)
+    Private Sub btnUpdateName_Click(sender As Object, e As EventArgs) Handles btnUpdateName.Click
+        If txtName.Text.Trim().Length <> BaseCommand.DEVICENAME_LENGTH Then
+            MessageBox.Show("Device name must be " & BaseCommand.DEVICENAME_LENGTH & " characters long", "Failed to update Device Name", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End If
 
-    '        System.Threading.Thread.Sleep(New Random().Next(0, 1500))
+        '// SEND UPDATE COMMAND
+        Dim cmd As New ChangeNameCommand()
 
-    '        Dim cmb As ComboBox = Me.Controls.Find("cmbCOM" & channel, True).First()
-
-    '        Dim data1 As New ChartData()
-    '        data1.Channel = channel
-    '        Me.Invoke(New Action(Sub() data1.COMPort = cmb.SelectedValue.ToString()))
-    '        data1.Name = "TIAN" & New Random().Next(1, 100)
-    '        data1.Items = New List(Of Double)()
-
-    '        Dim x As Double = New Random().Next(80, 120)
-    '        For i As Double = 0 To x
-    '            data1.Items.Add(i)
-    '        Next
-    '        For i As Double = x To 30 Step -1
-    '            data1.Items.Add(i)
-    '        Next
-
-    '        x = New Random().Next(60, 80)
-    '        For i As Double = 30 To x Step 1.5
-    '            data1.Items.Add(i)
-    '        Next
-    '        For i As Double = x To 20 Step -0.8
-    '            data1.Items.Add(i)
-    '        Next
-
-    '        x = New Random().Next(90, 150)
-    '        For i As Double = 21 To 120 Step 1
-    '            data1.Items.Add(i)
-    '        Next
-
-    '        PlotData(data1)
-    '    End Sub
-
-    '    Private Sub startData2(channel As Object)
-    '        System.Threading.Thread.Sleep(New Random().Next(1000, 4000))
-    '        Threading.Thread.Sleep(4000)
-
-    '        Dim cmb As ComboBox = Me.Controls.Find("cmbCOM" & channel, True).First()
-
-    '        Dim data2 As New ChartData()
-    '        data2.Channel = channel
-    '        Me.Invoke(New Action(Sub() data2.COMPort = cmb.SelectedValue.ToString()))
-    '        data2.Name = "TIAN" & New Random().Next(1, 100)
-    '        data2.Items = New List(Of Double)()
-
-    '        Dim x As Double = New Random().Next(50, 75)
-    '        For i As Double = 40 To x Step 1.5
-    '            data2.Items.Add(i)
-    '        Next
-    '        For i As Double = x To 35 Step -1.1
-    '            data2.Items.Add(i)
-    '        Next
-    '        x = New Random().Next(38, 55)
-    '        For i As Double = 35 To x Step 2
-    '            data2.Items.Add(i)
-    '        Next
-    '        For i As Double = x To 65 Step 0.5
-    '            data2.Items.Add(i)
-    '        Next
-
-    '        x = New Random().Next(10, 45)
-    '        For i As Double = 65 To x Step -1
-    '            data2.Items.Add(i)
-    '        Next
-
-    '        PlotData(data2)
-    '    End Sub
-
-    '    Private Sub plotDummyData(channel As Integer)
-    '        Dim t1 As New Threading.Thread(New Threading.ParameterizedThreadStart(AddressOf startData1))
-    '        Dim t2 As New Threading.Thread(New Threading.ParameterizedThreadStart(AddressOf startData2))
-
-    '        t1.Start(channel)
-    '        t2.Start(channel)
-    '    End Sub
-    '#End Region
-
+        cmd.DeviceName = txtName.Text.Trim()
+        cmd.DataStreamLength = 5
+    End Sub
 End Class
