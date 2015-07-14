@@ -9,3 +9,14 @@ C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.vbproj.GenerateResource.Cache
 C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.exe
 C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.xml
 C:\Personal\Dev\Robonii\Robonii\obj\Debug\Robonii.pdb
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.exe
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.xml
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.pdb
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\bin\Debug\Robonii.exe
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\bin\Debug\Robonii.pdb
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\bin\Debug\Robonii.xml
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.frmFFT.resources
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.MainForm.resources
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.frmOscilloscope.resources
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.Resources.resources
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii\obj\Debug\Robonii.vbproj.GenerateResource.Cache

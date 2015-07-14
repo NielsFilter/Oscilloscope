@@ -4,6 +4,7 @@
     Dim _frmFFT As frmFFT
 
     Private Sub tsmiOscilloscope_Click(sender As Object, e As EventArgs) Handles tsmiOscilloscope.Click
+
         If Me.IsFormOpen(Me._frmOscilloscope) Then
             Exit Sub '// Form is already open
         End If

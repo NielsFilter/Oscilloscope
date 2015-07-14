@@ -9,9 +9,13 @@ Public Class frmOscilloscope
     Private oldZeroLine2 As Double = 0
     Private oldZeroLine3 As Double = 0
 
-    Private oldCOMPort1 As String = "COM1"
-    Private oldCOMPort2 As String = "COM1"
-    Private oldCOMPort3 As String = "COM1"
+    Private oldCOMPort1 As String = "COM0"
+    Private oldCOMPort2 As String = "COM0"
+    Private oldCOMPort3 As String = "COM0"
+
+    Private WithEvents device1 As SerialConnection
+    Private WithEvents device2 As SerialConnection
+    Private WithEvents device3 As SerialConnection
 
     Private Sub frmOscilloscope_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -110,7 +114,7 @@ Public Class frmOscilloscope
         Return Color.Blue
     End Function
 
-#Region " COM Port Changed"
+#Region " COM Port Changed "
 
     Private Sub COM1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCOM1.SelectedIndexChanged
         If Me.isLoading Then
@@ -132,11 +136,20 @@ Public Class frmOscilloscope
             Exit Sub
         End If
 
+        '// Primary channel has a few extra columns to clear out.
+        Me.nudTrigger1.Value = 0
+
+        If device1 IsNot Nothing Then
+            device1.Dispose()
+        End If
+
+
         '// Reset the channel
         Me.ResetChannel(1, oldCOMPort1, nudZeroLine1, cmbCOM1)
 
-        '// Primary channel has a few extra columns to clear out.
-        Me.nudTrigger1.Value = 0
+        If cmbCOM1.SelectedIndex > 0 Then
+            Me.connectDevice(device1, 1, cmbCOM1.SelectedValue)
+        End If
     End Sub
     Private Sub COM2_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCOM2.SelectedIndexChanged
         If Me.isLoading Then
@@ -160,6 +173,10 @@ Public Class frmOscilloscope
 
         '// Reset the channel
         Me.ResetChannel(2, oldCOMPort2, nudZeroLine2, cmbCOM2)
+
+        If cmbCOM2.SelectedIndex > 0 Then
+            Me.connectDevice(device2, 2, cmbCOM2.SelectedValue)
+        End If
     End Sub
     Private Sub COM3_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCOM3.SelectedIndexChanged
         If Me.isLoading Then
@@ -183,6 +200,10 @@ Public Class frmOscilloscope
 
         '// Reset the channel
         Me.ResetChannel(3, oldCOMPort3, nudZeroLine3, cmbCOM3)
+
+        If cmbCOM3.SelectedIndex > 0 Then
+            Me.connectDevice(device3, 3, cmbCOM3.SelectedValue)
+        End If
     End Sub
 
     Private Sub ResetChannel(channel As Integer, ByRef oldCOMPort As String, zeroLineValue As NumericUpDown, cmbCOM As ComboBox)
@@ -208,13 +229,7 @@ Public Class frmOscilloscope
 
         '// Update the old COM Port to the current one
         oldCOMPort = cmbCOM.SelectedValue.ToString()
-
-        If cmbCOM.SelectedIndex > 0 Then
-            '// TODO: REPLACE THIS WITH POPULATE FROM PCB
-            plotDummyData(channel)
-        End If
     End Sub
-
 
 #End Region
 
@@ -273,85 +288,38 @@ Public Class frmOscilloscope
     End Sub
 #End Region
 
-#Region "Dummy Data"
-    Private Sub startData1(channel As Object)
+#Region " Connecting Serial Device and Receiving Data "
 
-        System.Threading.Thread.Sleep(New Random().Next(0, 1500))
-
-        Dim cmb As ComboBox = Me.Controls.Find("cmbCOM" & channel, True).First()
-
-        Dim data1 As New ChartData()
-        data1.Channel = channel
-        Me.Invoke(New Action(Sub() data1.COMPort = cmb.SelectedValue.ToString()))
-        data1.Name = "TIAN" & New Random().Next(1, 100)
-        data1.Items = New List(Of Double)()
-
-        Dim x As Double = New Random().Next(80, 120)
-        For i As Double = 0 To x
-            data1.Items.Add(i)
-        Next
-        For i As Double = x To 30 Step -1
-            data1.Items.Add(i)
-        Next
-
-        x = New Random().Next(60, 80)
-        For i As Double = 30 To x Step 1.5
-            data1.Items.Add(i)
-        Next
-        For i As Double = x To 20 Step -0.8
-            data1.Items.Add(i)
-        Next
-
-        x = New Random().Next(90, 150)
-        For i As Double = 21 To 120 Step 1
-            data1.Items.Add(i)
-        Next
-
-        PlotData(data1)
+    Private Sub connectDevice(ByRef device As SerialConnection, channelNo As Integer, portName As String)
+        device = New SerialConnection(channelNo, portName)
+        device.ReceiveAsync()
     End Sub
 
-    Private Sub startData2(channel As Object)
-        System.Threading.Thread.Sleep(New Random().Next(1000, 4000))
-        Threading.Thread.Sleep(4000)
-
-        Dim cmb As ComboBox = Me.Controls.Find("cmbCOM" & channel, True).First()
-
-        Dim data2 As New ChartData()
-        data2.Channel = channel
-        Me.Invoke(New Action(Sub() data2.COMPort = cmb.SelectedValue.ToString()))
-        data2.Name = "TIAN" & New Random().Next(1, 100)
-        data2.Items = New List(Of Double)()
-
-        Dim x As Double = New Random().Next(50, 75)
-        For i As Double = 40 To x Step 1.5
-            data2.Items.Add(i)
-        Next
-        For i As Double = x To 35 Step -1.1
-            data2.Items.Add(i)
-        Next
-        x = New Random().Next(38, 55)
-        For i As Double = 35 To x Step 2
-            data2.Items.Add(i)
-        Next
-        For i As Double = x To 65 Step 0.5
-            data2.Items.Add(i)
-        Next
-
-        x = New Random().Next(10, 45)
-        For i As Double = 65 To x Step -1
-            data2.Items.Add(i)
-        Next
-
-        PlotData(data2)
+    Private Sub disconnectDevice()
+        If device1 IsNot Nothing Then
+            device1.Dispose()
+        End If
     End Sub
 
-    Private Sub plotDummyData(channel As Integer)
-        Dim t1 As New Threading.Thread(New Threading.ParameterizedThreadStart(AddressOf startData1))
-        Dim t2 As New Threading.Thread(New Threading.ParameterizedThreadStart(AddressOf startData2))
+    Private Sub SomeBytesReceived(sender As SerialConnection, cmd As BaseCommand) Handles device1.CommandReceived, device2.CommandReceived, device3.CommandReceived
 
-        t1.Start(channel)
-        t2.Start(channel)
+        If Not TypeOf cmd Is OscilloscopeCommand Then
+            Exit Sub '// Wrong command, we only care for Oscilloscope commands
+        End If
+
+        Dim oscilloscopeCmd As OscilloscopeCommand = cmd
+
+        Dim data As New ChartData()
+        data.Channel = sender.ChannelNo
+        data.COMPort = sender.PortName
+        data.Name = oscilloscopeCmd.DeviceName
+        data.TimeDivision = oscilloscopeCmd.TimeDivision '// Not used anywhere yet.
+
+        data.Items = oscilloscopeCmd.OscilloscopeData
+
+        PlotData(data)
     End Sub
+
 #End Region
 
     Private Sub btnClearGraph_Click(sender As Object, e As EventArgs) Handles btnClearGraph.Click
@@ -359,4 +327,87 @@ Public Class frmOscilloscope
         cmbCOM2.SelectedIndex = 0
         cmbCOM3.SelectedIndex = 0
     End Sub
+
+    'TODO: REMOVE DUMMY DATA
+    '#Region "Dummy Data"
+    '    Private Sub startData1(channel As Object)
+
+    '        System.Threading.Thread.Sleep(New Random().Next(0, 1500))
+
+    '        Dim cmb As ComboBox = Me.Controls.Find("cmbCOM" & channel, True).First()
+
+    '        Dim data1 As New ChartData()
+    '        data1.Channel = channel
+    '        Me.Invoke(New Action(Sub() data1.COMPort = cmb.SelectedValue.ToString()))
+    '        data1.Name = "TIAN" & New Random().Next(1, 100)
+    '        data1.Items = New List(Of Double)()
+
+    '        Dim x As Double = New Random().Next(80, 120)
+    '        For i As Double = 0 To x
+    '            data1.Items.Add(i)
+    '        Next
+    '        For i As Double = x To 30 Step -1
+    '            data1.Items.Add(i)
+    '        Next
+
+    '        x = New Random().Next(60, 80)
+    '        For i As Double = 30 To x Step 1.5
+    '            data1.Items.Add(i)
+    '        Next
+    '        For i As Double = x To 20 Step -0.8
+    '            data1.Items.Add(i)
+    '        Next
+
+    '        x = New Random().Next(90, 150)
+    '        For i As Double = 21 To 120 Step 1
+    '            data1.Items.Add(i)
+    '        Next
+
+    '        PlotData(data1)
+    '    End Sub
+
+    '    Private Sub startData2(channel As Object)
+    '        System.Threading.Thread.Sleep(New Random().Next(1000, 4000))
+    '        Threading.Thread.Sleep(4000)
+
+    '        Dim cmb As ComboBox = Me.Controls.Find("cmbCOM" & channel, True).First()
+
+    '        Dim data2 As New ChartData()
+    '        data2.Channel = channel
+    '        Me.Invoke(New Action(Sub() data2.COMPort = cmb.SelectedValue.ToString()))
+    '        data2.Name = "TIAN" & New Random().Next(1, 100)
+    '        data2.Items = New List(Of Double)()
+
+    '        Dim x As Double = New Random().Next(50, 75)
+    '        For i As Double = 40 To x Step 1.5
+    '            data2.Items.Add(i)
+    '        Next
+    '        For i As Double = x To 35 Step -1.1
+    '            data2.Items.Add(i)
+    '        Next
+    '        x = New Random().Next(38, 55)
+    '        For i As Double = 35 To x Step 2
+    '            data2.Items.Add(i)
+    '        Next
+    '        For i As Double = x To 65 Step 0.5
+    '            data2.Items.Add(i)
+    '        Next
+
+    '        x = New Random().Next(10, 45)
+    '        For i As Double = 65 To x Step -1
+    '            data2.Items.Add(i)
+    '        Next
+
+    '        PlotData(data2)
+    '    End Sub
+
+    '    Private Sub plotDummyData(channel As Integer)
+    '        Dim t1 As New Threading.Thread(New Threading.ParameterizedThreadStart(AddressOf startData1))
+    '        Dim t2 As New Threading.Thread(New Threading.ParameterizedThreadStart(AddressOf startData2))
+
+    '        t1.Start(channel)
+    '        t2.Start(channel)
+    '    End Sub
+    '#End Region
+
 End Class
