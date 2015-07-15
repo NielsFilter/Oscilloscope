@@ -82,6 +82,8 @@ Public Class frmOscilloscope
 
                                            chtOscilloscope.ChartAreas(0).AxisY.StripLines.Add(zeroLine)
                                        End If
+
+                                       chtOscilloscope.Refresh()
                                    End Sub)
 
         If Me.InvokeRequired Then
@@ -192,6 +194,7 @@ Public Class frmOscilloscope
     Private Sub ResetChannel(channel As Integer, ByRef device As SerialConnection, ByRef oldCOMPort As String, zeroLineValue As NumericUpDown, cmbCOM As ComboBox)
         If device IsNot Nothing Then
             device.Dispose()
+            device = Nothing
         End If
 
         '// Reset COM configuration
@@ -320,14 +323,37 @@ Public Class frmOscilloscope
     End Sub
 
     Private Sub btnUpdateName_Click(sender As Object, e As EventArgs) Handles btnUpdateName.Click
+        If cmbCOM1.SelectedIndex = 0 Then
+            MessageBox.Show("Please select the Port to which the name change must be sent.", "No COM Port selected", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        If Me.device1 Is Nothing OrElse Me.device1.IsConnected = False Then
+            MessageBox.Show("There is no device connected on " & cmbCOM1.SelectedValue, "No device found on select port", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+
         If txtName.Text.Trim().Length <> BaseCommand.DEVICENAME_LENGTH Then
             MessageBox.Show("Device name must be " & BaseCommand.DEVICENAME_LENGTH & " characters long", "Failed to update Device Name", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
         End If
 
         '// SEND UPDATE COMMAND
-        Dim cmd As New ChangeNameCommand()
+        Try
+            Dim cmd As New ChangeNameCommand()
 
-        cmd.DeviceName = txtName.Text.Trim()
-        cmd.DataStreamLength = 5
+            cmd.DeviceName = "TIAN6"
+            cmd.DataStreamLength = 5
+            cmd.Command = CommandType.ChangeName
+            cmd.DataStreamLength = 5
+            cmd.SetNewName(txtName.Text.Trim())
+
+            '// Send command to the primary device.
+            device1.Send(cmd)
+        Catch ex As Exception
+            MessageBox.Show(String.Format("Could not update name to '{0}'.{1}{1}{2}", txtName.Text.Trim(), Environment.NewLine, ex.Message), "Device name change failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
     End Sub
 End Class

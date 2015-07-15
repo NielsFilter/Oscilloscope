@@ -5,11 +5,10 @@ Imports System.Text
 Public Class SerialConnection
     Implements IDisposable
 
+    Private WithEvents incomingCmd As BaseCommand
     Private mySerialPort As New SerialPort
-    Private serialportNames As SortedList(Of String, String)
-    ' Private ClassSerialInfo As SerialInfo
-    Dim RxByteBufMain() As Byte
-    Dim RxStringBufMain As String
+    Private isComplete As Boolean
+    Private offset As Integer
 
 #Region " Properties "
 
@@ -20,6 +19,16 @@ Public Class SerialConnection
     Public Property Parity As Parity
     Public Property StopBits As StopBits
     Public Property HandShake As Handshake
+
+    Public ReadOnly Property IsConnected As Boolean
+        Get
+            If Me.mySerialPort Is Nothing Then
+                Return False
+            End If
+
+            Return Me.mySerialPort.IsOpen
+        End Get
+    End Property
 
 #End Region
 
@@ -49,6 +58,7 @@ Public Class SerialConnection
 
 #Region " Receive "
 
+
     Public Sub ReceiveAsync()
         Dim threadStart As New ThreadStart(AddressOf Me.Receive)
         Dim thread As New Thread(threadStart)
@@ -73,12 +83,6 @@ Public Class SerialConnection
             ApplicationErrors.Handle(ex)
         End Try
     End Sub
-
-#End Region
-
-    Private WithEvents incomingCmd As BaseCommand
-    Private isComplete As Boolean
-    Private offset As Integer
 
     'Read data from port when it becomes available, and send it to AppendByte and AppendString and append string Decimal
     Private Sub ReceiveSerialBytes(ByVal sender As Object, ByVal e As SerialDataReceivedEventArgs)
@@ -106,6 +110,27 @@ Public Class SerialConnection
         Me.offset = 0
         Me.incomingCmd = Nothing
     End Sub
+
+#End Region
+
+#Region " Send "
+
+    Public Sub Send(outgoingCmd As BaseCommand)
+        'Convert the command to a byte array and then send it.
+        Dim sendBytes = CommandManager.TranslateByte(outgoingCmd)
+        Me.Send(sendBytes)
+    End Sub
+
+    Public Sub Send(sendBytes As Byte())
+        If sendBytes Is Nothing OrElse sendBytes.Length = 0 Then
+            Exit Sub
+        End If
+
+        'Send the command to the Serial device
+        mySerialPort.Write(sendBytes, 0, sendBytes.Length)
+    End Sub
+
+#End Region
 
 #Region " IDisposable Members "
 

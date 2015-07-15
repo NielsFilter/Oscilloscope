@@ -15,7 +15,11 @@
     ''' which can now be used to send to the device. Working in CLR Types (objects), is much easier and so we
     ''' typically stay in the object world until the command needs to go out.
     ''' </remarks>
-    Public Shared Function TranslateByte(cmd As FFTCommand) As Byte()
+    Public Shared Function TranslateByte(cmd As BaseCommand) As Byte()
+        If cmd Is Nothing Then
+            Return Nothing
+        End If
+
         Dim lstBytes As New List(Of Byte)
 
         '==============
@@ -24,8 +28,8 @@
 
         'Start Bytes
         '// The Start Bytes are constant and are set in the BaseCommand class.
-        lstBytes.Add(cmd.StartByte1)
-        lstBytes.Add(cmd.StartByte2)
+        lstBytes.Add(BaseCommand.StartByte1)
+        lstBytes.Add(BaseCommand.StartByte2)
 
         'Packet Type
         '// Out PacketTypes enum holds the possible packet types.
@@ -84,7 +88,7 @@
         '// Automatically calculated in the BaseCommand class.
         lstBytes.Add(cmd.CRCData)
 
-        Return Nothing
+        Return lstBytes.ToArray()
     End Function
 
     Public Shared Function TranslateByte(bytes As Byte(), ByRef cmd As BaseCommand, ByRef startPosition As Integer, ByRef offset As Integer) As Boolean
@@ -148,20 +152,25 @@
                     offset += 1
 
                 Case 13 'Command
+                    Dim commandValue As Integer = currentByte
+                    If Not [Enum].IsDefined(GetType(CommandType), commandValue) Then
+                        Return False
+                    End If
+
                     cmd.Command = currentByte
                     offset += 1
 
                 Case 14 'Data Stream Length
-                    'TODO: current byte must be 2 lengths
                     Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
-                    cmd.DataStreamLength = currentByte << 8 Or nextByte
+                    cmd.DataStreamLength = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
 
                     offset += BaseCommand.DATASTREAMBYTE_LENGTH
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
 
                 Case 16 'Data Stream Position
-                    'TODO: current byte must be 2 lengths
-                    cmd.DataStreamPosition = currentByte
+                    Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
+                    cmd.DataStreamPosition = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
+
                     offset += BaseCommand.DATASTREAMBYTE_LENGTH
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
 
@@ -186,7 +195,8 @@
 
                     offset += 1
                 Case Else
-                    If offset > 19 Then '// TODO: Work out which byte is the actual CRC
+                    If offset > (19 + cmd.DataStreamPosition) Then
+                        '// TODO: Check CRC here. If it's valid, then Bob's your uncle
                         offset = 1
                         cmd.DoneBuildingCommand()
                     End If

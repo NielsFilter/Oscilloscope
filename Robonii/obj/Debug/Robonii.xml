@@ -19,7 +19,7 @@ Robonii
 	<summary>
   A strongly-typed resource class, for looking up localized strings, etc.
 </summary>
-</member><member name="M:Robonii.CommandManager.TranslateByte(Robonii.FFTCommand)">
+</member><member name="M:Robonii.CommandManager.TranslateByte(Robonii.BaseCommand)">
 	<summary>
  This Method translates our <see cref="!:OutgoingCommand"/> into a byte array.
  </summary>

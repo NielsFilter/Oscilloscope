@@ -89,12 +89,12 @@
     End Property
 
     '13: Command
-    Private _command As Integer
-    Public Property Command As Integer
+    Private _command As CommandType
+    Public Property Command As CommandType
         Get
             Return Me._command
         End Get
-        Set(value As Integer)
+        Set(value As CommandType)
             Me._command = value
         End Set
     End Property
@@ -106,7 +106,7 @@
             Return Me._dataStreamLength
         End Get
         Set(value As Integer)
-            Dim maxValue = 256 * DATASTREAMBYTE_LENGTH
+            Dim maxValue = Math.Pow(256, DATASTREAMBYTE_LENGTH)
             If value > maxValue Then
                 Throw New ArgumentException(String.Format("Data Stream Length must be less than {0}, which is {1} bytes", maxValue, DATASTREAMBYTE_LENGTH))
             End If
@@ -122,7 +122,7 @@
             Return Me._dataStreamPosition
         End Get
         Set(value As Integer)
-            Dim maxValue = 256 * DATASTREAMBYTE_LENGTH
+            Dim maxValue = Math.Pow(256, DATASTREAMBYTE_LENGTH)
             If value > maxValue Then
                 Throw New ArgumentException(String.Format("Data Stream Position must be less than {0}, which is {1} bytes", maxValue, DATASTREAMBYTE_LENGTH))
             End If
@@ -144,7 +144,7 @@
 
     '19 - n: Data
     Private _data As List(Of Byte)
-    Public Property Data As List(Of Byte)
+    Public Overridable Property Data As List(Of Byte)
         Get
             Return Me._data
         End Get

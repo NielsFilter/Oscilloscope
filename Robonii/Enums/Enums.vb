@@ -21,3 +21,12 @@ Public Enum GainTypes
     <GainValue(16)>
     x16
 End Enum
+
+Public Enum CommandType
+    ChangeName = 3          '0x03
+    FFTData = 70            '0x46 
+    OscilloscopeData = 83   '0x53
+    Calibrate = 84          '0x54
+    ChangeParameters = 85   '0x55
+    ChangeFunction = 241    '0xF1
+End Enum
