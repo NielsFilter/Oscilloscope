@@ -345,7 +345,7 @@ Public Class frmOscilloscope
 
             cmd.DeviceName = "TIAN6"
             cmd.DataStreamLength = 5
-            cmd.Command = CommandType.ChangeName
+            cmd.Command = CommandTypes.ChangeName
             cmd.DataStreamLength = 5
             cmd.SetNewName(txtName.Text.Trim())
 

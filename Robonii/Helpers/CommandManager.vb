@@ -1,10 +1,5 @@
 ﻿Public Class CommandManager
 
-    Public Shared Function SendCommand(cmd As FFTCommand)
-        Dim outgoingBytes As Byte() = TranslateByte(cmd)
-        'TODO: Send command to Device
-    End Function
-
     ''' <summary>
     ''' This Method translates our <see cref="OutgoingCommand"/> into a byte array.
     ''' </summary>
@@ -15,7 +10,7 @@
     ''' which can now be used to send to the device. Working in CLR Types (objects), is much easier and so we
     ''' typically stay in the object world until the command needs to go out.
     ''' </remarks>
-    Public Shared Function TranslateByte(cmd As BaseCommand) As Byte()
+    Public Shared Function TranslateToBytes(cmd As BaseCommand) As Byte()
         If cmd Is Nothing Then
             Return Nothing
         End If
@@ -41,7 +36,7 @@
         'Name
         '// The validation to limit the name is in the BaseCommand class.
         '// Here we simply get the name and cast it from ASCII back to a byte array.
-        lstBytes.AddRange(System.Text.Encoding.ASCII.GetBytes(cmd.DeviceName.ToArray()))
+        lstBytes.AddRange(Utils.ASCIIToBytes(cmd.DeviceName))
 
         'Time Division Param
         lstBytes.Add(Utils.ToByte(cmd.TimeDivision))
@@ -91,79 +86,111 @@
         Return lstBytes.ToArray()
     End Function
 
-    Public Shared Function TranslateByte(bytes As Byte(), ByRef cmd As BaseCommand, ByRef startPosition As Integer, ByRef offset As Integer) As Boolean
+    Public Shared Function BuildCommand(bytes As Byte(), ByRef cmd As BaseCommand, ByRef packetNumber As Integer, ByRef startPosition As Integer, ByRef offset As Integer) As Boolean
 
+        Dim isMorePacketsToFollow As Boolean = False
         Dim currentByte = bytes(startPosition)
 
         Try
             Select Case offset
                 Case 0 'Start Byte 1
-                    If currentByte = BaseCommand.StartByte1 Then
-                        offset += 1
-                    Else
+                    If currentByte <> BaseCommand.StartByte1 Then
                         Return False
                     End If
 
+                    offset += 1
+
                 Case 1 'Start Byte 2
-                    If currentByte = BaseCommand.StartByte2 Then
-                        offset += 1
-                    Else
+                    If currentByte <> BaseCommand.StartByte2 Then
                         Return False
                     End If
+
+                    offset += 1
 
                 Case 2 'Packet Type
                     If currentByte = &H53 Then
                         cmd = New OscilloscopeCommand()
-                        offset += 1
                     ElseIf currentByte = &H46 Then
                         cmd = New FFTCommand()
-                        offset += 1
                     Else
                         Return False
                     End If
 
+                    '// Since we only instantiate the command here, now we can do the checksum for the start bytes and packet type byte.
+                    cmd.XorData = &H0
+                    cmd.CalculateCRC({BaseCommand.StartByte1, BaseCommand.StartByte2, currentByte})
+                    offset += 1
+
                 Case 3 'Device Name
                     Dim diviceNameBytes = bytes.Skip(startPosition).Take(BaseCommand.DEVICENAME_LENGTH).ToArray()
                     cmd.DeviceName = Utils.ByteToASCII(diviceNameBytes)
-                    offset += BaseCommand.DEVICENAME_LENGTH
+
+                    cmd.CalculateCRC(diviceNameBytes)
                     startPosition += BaseCommand.DEVICENAME_LENGTH - 1
-                    'TODO: Look for a better way to combine offset and start position
+                    offset += BaseCommand.DEVICENAME_LENGTH
 
                 Case 8 'Time Division Param
                     cmd.TimeDivision = currentByte
+
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
 
                 Case 9 'V Trigger
                     cmd.VTrigger = currentByte
+
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
 
                 Case 10 'Gain
                     Dim gain As Integer = currentByte
-                    'Me.Gain = 
-                    'TODO: NF
+                    If Not [Enum].IsDefined(GetType(GainTypes), gain) Then
+                        Return False
+                    End If
+
+                    cmd.Gain = gain
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
 
                 Case 11 'Packet Number
                     cmd.PacketNumber = currentByte
+
+                    If cmd.PacketNumber <> packetNumber Then
+                        Return False '// We've received a different packet number than expected.
+                    End If
+
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
 
                 Case 12 'Total Packets
                     cmd.TotalPackets = currentByte
+
+                    If cmd.PacketNumber < cmd.TotalPackets Then
+                        isMorePacketsToFollow = True
+                        packetNumber += 1 '// Next time we come past here, we expect the "next" packet.
+                    ElseIf cmd.PacketNumber > cmd.TotalPackets Then
+                        Return False '// Not possible. Data invalid, chuck it.
+                    Else
+                        isMorePacketsToFollow = False
+                    End If
+
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
 
                 Case 13 'Command
                     Dim commandValue As Integer = currentByte
-                    If Not [Enum].IsDefined(GetType(CommandType), commandValue) Then
+                    If Not [Enum].IsDefined(GetType(CommandTypes), commandValue) Then
                         Return False
                     End If
 
                     cmd.Command = currentByte
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
 
                 Case 14 'Data Stream Length
                     Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
                     cmd.DataStreamLength = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
 
+                    cmd.CalculateCRC({currentByte, nextByte}) '// We pass the 2 Data Stream Length bytes as an array
                     offset += BaseCommand.DATASTREAMBYTE_LENGTH
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
 
@@ -171,34 +198,60 @@
                     Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
                     cmd.DataStreamPosition = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
 
-                    offset += BaseCommand.DATASTREAMBYTE_LENGTH
+                    cmd.CalculateCRC({currentByte, nextByte}) '// We pass the 2 Data Stream Position bytes as an array
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
+                    offset += BaseCommand.DATASTREAMBYTE_LENGTH
 
                 Case 18 ' CRC Header
-                    'TODO: Calculate CRC Header
-                    Dim isCRCCorrect As Boolean = True
-                    If isCRCCorrect Then
-                        'Correct CRC Header
-                        cmd.CRCHeader = currentByte
-                        offset += 1
-                    Else
+                    cmd.CRCHeader = currentByte
+                    If cmd.CRCHeader <> cmd.XorData Then
                         'Invalid CRC Header, cannot trust data.
                         Return False
                     End If
 
-                Case 19 'Data
-                    If cmd.Data Is Nothing Then
-                        cmd.Data = New List(Of Byte)()
-                    End If
-
-                    cmd.Data.AddRange(bytes.Skip(startPosition).Take(cmd.DataStreamLength)) 'TODO: This might be broken up, so we must cmd.DataStreamLength
-
+                    cmd.CalculateCRC(currentByte)
                     offset += 1
+
+                    '// Data and CRC header
                 Case Else
-                    If offset > (19 + cmd.DataStreamPosition) Then
-                        '// TODO: Check CRC here. If it's valid, then Bob's your uncle
-                        offset = 1
-                        cmd.DoneBuildingCommand()
+                    Dim crcDataIndex = (19 + cmd.DataStreamLength)
+
+                    If offset > 18 AndAlso offset < crcDataIndex Then
+                        '// Data
+                        If cmd.Data Is Nothing Then
+                            cmd.Data = New List(Of Byte)()
+                        End If
+
+                        Dim bytesToTake = cmd.DataStreamLength - cmd.Data.Count
+
+                        Dim dataByteArr = bytes.Skip(startPosition).Take(bytesToTake).ToArray()
+                        For Each b In dataByteArr
+                            cmd.Data.Add(b)
+
+                            cmd.CalculateCRC(b)
+                            offset += 1
+                        Next
+
+                        startPosition += dataByteArr.Length - 1
+
+                    ElseIf offset = crcDataIndex Then
+                        '// CRC Data
+                        cmd.CRCData = currentByte
+                        If cmd.CRCData <> cmd.XorData Then
+                            'Invalid CRC Data, cannot trust data.
+                            Return False
+                        End If
+
+                        '// Reset offset
+                        offset = 0
+
+                        If cmd.PacketNumber = cmd.TotalPackets Then
+                            '// We're not expecting anymore packets. Signal that we're done.
+                            cmd.DoneBuildingCommand()
+                        End If
+
+                    Else
+                        Return False
                     End If
             End Select
 

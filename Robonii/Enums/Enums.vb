@@ -10,19 +10,14 @@
 End Enum
 
 Public Enum GainTypes
-    <GainValue(1)>
-    x1
-    <GainValue(2)>
-    x2
-    <GainValue(4)>
-    x4
-    <GainValue(8)>
-    x8
-    <GainValue(16)>
-    x16
+    x1 = 1
+    x2 = 2
+    x4 = 4
+    x8 = 8
+    x16 = 16
 End Enum
 
-Public Enum CommandType
+Public Enum CommandTypes
     ChangeName = 3          '0x03
     FFTData = 70            '0x46 
     OscilloscopeData = 83   '0x53

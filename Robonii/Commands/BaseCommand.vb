@@ -14,7 +14,7 @@
     Public Event CommandBuiltSuccessfully As CommandBuiltHandler
 #End Region
 
-#Region " Properties "
+#Region " Protocol Properties "
 
     '2: Packet Type
     Public MustOverride ReadOnly Property PacketType As PacketTypes
@@ -89,12 +89,12 @@
     End Property
 
     '13: Command
-    Private _command As CommandType
-    Public Property Command As CommandType
+    Private _command As CommandTypes
+    Public Property Command As CommandTypes
         Get
             Return Me._command
         End Get
-        Set(value As CommandType)
+        Set(value As CommandTypes)
             Me._command = value
         End Set
     End Property
@@ -154,13 +154,34 @@
     End Property
 
     'n + 1: CRC Data
-    Public ReadOnly Property CRCData As Byte
+    Private _crcData As Byte
+    Public Property CRCData As Byte
         Get
-            Return 0 'TODO: Implement Header Check
+            Return Me._crcData
         End Get
+        Set(value As Byte)
+            Me._crcData = value
+        End Set
     End Property
 
 #End Region
+
+#Region " Checksum (CRC) "
+
+    Public Property XorData As Byte
+
+    Public Sub CalculateCRC(b As Byte)
+        XorData = XorData Xor b '// Apply XOR
+    End Sub
+
+    Public Sub CalculateCRC(bytes As Byte())
+        For Each b In bytes
+            CalculateCRC(b)
+        Next
+    End Sub
+
+#End Region
+
 
     Public Sub DoneBuildingCommand()
         RaiseEvent CommandBuiltSuccessfully(Me)

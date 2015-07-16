@@ -37,4 +37,8 @@ Public Class Utils
         Return System.Text.Encoding.ASCII.GetString(bytes)
     End Function
 
+    Public Shared Function ASCIIToBytes(asciiValue As String) As Byte()
+        Return System.Text.Encoding.ASCII.GetBytes(asciiValue)
+    End Function
+
 End Class

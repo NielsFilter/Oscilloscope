@@ -7,8 +7,9 @@ Public Class SerialConnection
 
     Private WithEvents incomingCmd As BaseCommand
     Private mySerialPort As New SerialPort
-    Private isComplete As Boolean
+    Private packetNumber As Integer
     Private offset As Integer
+    Private lock As New Object()
 
 #Region " Properties "
 
@@ -86,20 +87,19 @@ Public Class SerialConnection
 
     'Read data from port when it becomes available, and send it to AppendByte and AppendString and append string Decimal
     Private Sub ReceiveSerialBytes(ByVal sender As Object, ByVal e As SerialDataReceivedEventArgs)
-        'Handles serial port data received events 
-        Dim n As Integer = mySerialPort.BytesToRead
-        Dim comBuffer As Byte() = New Byte(n - 1) {}
-        mySerialPort.Read(comBuffer, 0, n)
+        SyncLock (lock)
+            'Handles serial port data received events 
+            Dim n As Integer = mySerialPort.BytesToRead
+            Dim comBuffer As Byte() = New Byte(n - 1) {}
+            mySerialPort.Read(comBuffer, 0, n)
 
-        For i = 0 To comBuffer.Length - 1
-            If Me.isComplete = True Then
-                Exit For 'TODO: Implement multiple commands following another.
-            End If
-
-            If Not CommandManager.TranslateByte(comBuffer, incomingCmd, i, offset) Then
-                Me.resetCommand()
-            End If
-        Next
+            For i = 0 To comBuffer.Length - 1
+                '// Current the packets
+                If Not CommandManager.BuildCommand(comBuffer, Me.incomingCmd, Me.packetNumber, i, Me.offset) Then
+                    Me.resetCommand()
+                End If
+            Next
+        End SyncLock
     End Sub
 
     Private Sub cmdBuilt(cmd As BaseCommand) Handles incomingCmd.CommandBuiltSuccessfully
@@ -107,6 +107,7 @@ Public Class SerialConnection
     End Sub
 
     Private Sub resetCommand()
+        Me.packetNumber = 1 '// Default we start with the packet no. 1
         Me.offset = 0
         Me.incomingCmd = Nothing
     End Sub
@@ -117,7 +118,7 @@ Public Class SerialConnection
 
     Public Sub Send(outgoingCmd As BaseCommand)
         'Convert the command to a byte array and then send it.
-        Dim sendBytes = CommandManager.TranslateByte(outgoingCmd)
+        Dim sendBytes = CommandManager.TranslateToBytes(outgoingCmd)
         Me.Send(sendBytes)
     End Sub
 
