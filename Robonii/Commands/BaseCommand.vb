@@ -67,7 +67,7 @@
     End Property
 
     '11: Packet Number
-    Private _packetNumber As Integer
+    Private _packetNumber As Integer = 1
     Public Property PacketNumber As Integer
         Get
             Return Me._packetNumber
@@ -78,7 +78,7 @@
     End Property
 
     '12: Total Packets
-    Private _totalPackets As Integer
+    Private _totalPackets As Integer = 1
     Public Property TotalPackets As Integer
         Get
             Return Me._totalPackets

@@ -81,7 +81,7 @@ Public Class SerialConnection
             Me.resetCommand()
             mySerialPort.Open()
         Catch ex As Exception
-            ApplicationErrors.Handle(ex)
+            MessageBox.Show(String.Format("Failed to connect to device on Port '{0}'", Me.PortName), "Could not connect to device", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 

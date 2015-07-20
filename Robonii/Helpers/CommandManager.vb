@@ -27,10 +27,8 @@
         lstBytes.Add(BaseCommand.StartByte2)
 
         'Packet Type
-        '// Out PacketTypes enum holds the possible packet types.
-        '// Each enum value has an 'HexCode' Attribute (the little piece above it), which holds the integer hex value
-        '// Here we get that Hex value from the enum value and convert it back to a byte.
-        Dim packetType As Integer = HexCodeAttribute.GetHexCode(cmd.PacketType)
+        '// Out PacketTypes enum holds the possible packet types. The enum value is the integer representation of the hex value.
+        Dim packetType As Integer = cmd.PacketType
         lstBytes.Add(Utils.ToByte(packetType))
 
         'Name

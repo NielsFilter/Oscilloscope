@@ -1,12 +1,7 @@
 ﻿Public Enum PacketTypes
-    <HexCode(0)>
-    None '0x00
-
-    <HexCode(&H53)>
-    Oscilloscope '0x53 = S in ASCII
-
-    <HexCode(&H46)>
-    FFT '0x46 = F in ASCII
+    None = 0 '0x00
+    Oscilloscope = 83 '0x53 = S in ASCII
+    FFT = 70 '0x46 = F in ASCII
 End Enum
 
 Public Enum GainTypes
