@@ -6,7 +6,73 @@ Robonii
 </name>
 </assembly>
 <members>
-<member name="P:Robonii.My.Resources.Resources.ResourceManager">
+<member name="M:Robonii.frmOscilloscope.PopulateCOMPorts">
+	<summary>
+ Fill the Port combo boxes will all the possible COM Ports. COM Ports 0 - 99 are populated.
+ </summary>
+	<remarks>"COM0" means no device connected.</remarks>
+</member><member name="M:Robonii.frmOscilloscope.ChannelColour(System.Int32)">
+	<summary>
+ Just to make it more distinguishable, we represent each channel with a colour.
+ So immediately when we see the baseline colour for instance we know which channel it is for.
+ </summary>
+	<param name="channelNumber">Channel Number</param>
+	<returns>A colour for the channel number</returns>
+</member><member name="M:Robonii.frmOscilloscope.PlotDataFromDifferentThreads(Robonii.ChartData)">
+	<summary>
+ Makes sure that the we're able to update the UI (the chart) from any thread.
+ </summary>
+	<param name="data">data to be plotted.</param>
+</member><member name="M:Robonii.frmOscilloscope.PlotData(Robonii.ChartData)">
+	<summary>
+ This is where the plotting magic happens. We receive a ChartData instance, which holds the info we need
+ (the name, plot data etc) and plot it to the graph / chart.
+ </summary>
+	<param name="data">data to be plotted.</param>
+</member><member name="M:Robonii.frmOscilloscope.getZeroLineOffset(System.Int32)">
+	<summary>
+ We keep a variable which stores the "offset" each channel's Zero Line. This method retrieves that offset.
+ </summary>
+	<param name="channel">Which channel's offset to retrieve</param>
+	<returns>The base line offset for the passed channel</returns>
+	<remarks>
+ The offset is simply the value of the Zero Line.
+ So if the Base Line was set to 10 previously, then the offset is 10. If - 5, then the offset is -5
+ </remarks>
+</member><member name="M:Robonii.frmOscilloscope.btnClearGraph_Click(System.Object,System.EventArgs)">
+	<summary>
+ Clear ALL graphs button click.
+ </summary>
+</member><member name="M:Robonii.frmOscilloscope.ResetAndConnectChannel(System.Int32,Robonii.SerialConnection@,System.String@,System.Windows.Forms.NumericUpDown,System.Windows.Forms.ComboBox)">
+	<summary>
+ Reset the channel and establish a connection to the selected "COM" port.
+ </summary>
+</member><member name="M:Robonii.frmOscilloscope.ShiftZeroLine(System.Int32,System.Windows.Forms.ComboBox,System.Windows.Forms.NumericUpDown,System.String@)">
+	<summary>
+ Handles shifting of the Zero Line / Base Line.
+ </summary>
+	<param name="channel">Channel number we're referring to</param>
+	<param name="cmbCOM">COM Port combo Box for the channel</param>
+	<param name="nudZeroLine">The Zero Line NumericUpDown control instance.</param>
+	<param name="oldZeroLine">A reference to the Previous zero line.</param>
+</member><member name="M:Robonii.frmOscilloscope.connectDevice(Robonii.SerialConnection@,System.Int32,System.String)">
+	<summary>
+ Connects to the Serial device and starts receiving data.
+ </summary>
+</member><member name="M:Robonii.frmOscilloscope.disconnectDevice(Robonii.SerialConnection@)">
+	<summary>
+ Disconnect serial device
+ </summary>
+	<remarks></remarks>
+</member><member name="M:Robonii.frmOscilloscope.SomeBytesReceived(Robonii.SerialConnection,Robonii.BaseCommand)">
+	<summary>
+ When any device sends Data, this method is called.
+ </summary>
+</member><member name="M:Robonii.frmOscilloscope.btnUpdateName_Click(System.Object,System.EventArgs)">
+	<summary>
+ Update the Device's name. Build up a ChangeNameCommand and send it.
+ </summary>
+</member><member name="P:Robonii.My.Resources.Resources.ResourceManager">
 	<summary>
   Returns the cached ResourceManager instance used by this class.
 </summary>
@@ -30,6 +96,14 @@ Robonii
  which can now be used to send to the device. Working in CLR Types (objects), is much easier and so we
  typically stay in the object world until the command needs to go out.
  </remarks>
+</member><member name="T:Robonii.ChartData">
+	<summary>
+ This class is used to hold all the data needed for plotting a graph.
+ </summary>
+	<remarks>
+ If in the future, different types of graphs need extra fields that other graph types do not, a good consideration would be
+ to create a ChartData class per chart which inherits this one. Then keep all the "core" properties shared by all charts in this class
+ and all the properties specific  </remarks>
 </member>
 </members>
 </doc>

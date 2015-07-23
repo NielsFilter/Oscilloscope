@@ -22,8 +22,8 @@ Partial Class frmOscilloscope
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim ChartArea1 As System.Windows.Forms.DataVisualization.Charting.ChartArea = New System.Windows.Forms.DataVisualization.Charting.ChartArea()
-        Dim Legend1 As System.Windows.Forms.DataVisualization.Charting.Legend = New System.Windows.Forms.DataVisualization.Charting.Legend()
+        Dim ChartArea7 As System.Windows.Forms.DataVisualization.Charting.ChartArea = New System.Windows.Forms.DataVisualization.Charting.ChartArea()
+        Dim Legend7 As System.Windows.Forms.DataVisualization.Charting.Legend = New System.Windows.Forms.DataVisualization.Charting.Legend()
         Me.pnlConfig = New System.Windows.Forms.Panel()
         Me.btnClearGraph = New System.Windows.Forms.Button()
         Me.gbChannel3 = New System.Windows.Forms.GroupBox()
@@ -39,26 +39,44 @@ Partial Class frmOscilloscope
         Me.gbChannel1 = New System.Windows.Forms.GroupBox()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.cmbCOM1 = New System.Windows.Forms.ComboBox()
-        Me.nudTrigger1 = New System.Windows.Forms.NumericUpDown()
+        Me.nudVTrigger = New System.Windows.Forms.NumericUpDown()
         Me.lblTrigger1 = New System.Windows.Forms.Label()
         Me.nudZeroLine1 = New System.Windows.Forms.NumericUpDown()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.chtOscilloscope = New System.Windows.Forms.DataVisualization.Charting.Chart()
-        Me.txtName = New System.Windows.Forms.TextBox()
+        Me.gbConfiguration = New System.Windows.Forms.GroupBox()
+        Me.Button1 = New System.Windows.Forms.Button()
+        Me.cmbTriggerChannel = New System.Windows.Forms.ComboBox()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.cmbGain = New System.Windows.Forms.ComboBox()
+        Me.nudTimeDivision = New System.Windows.Forms.NumericUpDown()
+        Me.Label3 = New System.Windows.Forms.Label()
         Me.btnUpdateName = New System.Windows.Forms.Button()
+        Me.txtName = New System.Windows.Forms.TextBox()
+        Me.btnUpdateParameters = New System.Windows.Forms.Button()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.Label5 = New System.Windows.Forms.Label()
+        Me.gbChangeParams = New System.Windows.Forms.GroupBox()
         Me.pnlConfig.SuspendLayout()
         Me.gbChannel3.SuspendLayout()
         CType(Me.nudZeroLine3, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbChannel2.SuspendLayout()
         CType(Me.nudZeroLine2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbChannel1.SuspendLayout()
-        CType(Me.nudTrigger1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.nudVTrigger, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.nudZeroLine1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.chtOscilloscope, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.gbConfiguration.SuspendLayout()
+        CType(Me.nudTimeDivision, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.GroupBox1.SuspendLayout()
+        Me.gbChangeParams.SuspendLayout()
         Me.SuspendLayout()
         '
         'pnlConfig
         '
+        Me.pnlConfig.Controls.Add(Me.Button1)
+        Me.pnlConfig.Controls.Add(Me.gbConfiguration)
         Me.pnlConfig.Controls.Add(Me.btnClearGraph)
         Me.pnlConfig.Controls.Add(Me.gbChannel3)
         Me.pnlConfig.Controls.Add(Me.gbChannel2)
@@ -73,9 +91,9 @@ Partial Class frmOscilloscope
         '
         Me.btnClearGraph.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClearGraph.Location = New System.Drawing.Point(6, 725)
+        Me.btnClearGraph.Location = New System.Drawing.Point(12, 725)
         Me.btnClearGraph.Name = "btnClearGraph"
-        Me.btnClearGraph.Size = New System.Drawing.Size(233, 23)
+        Me.btnClearGraph.Size = New System.Drawing.Size(111, 23)
         Me.btnClearGraph.TabIndex = 16
         Me.btnClearGraph.Text = "Clear All"
         Me.btnClearGraph.UseVisualStyleBackColor = True
@@ -88,15 +106,17 @@ Partial Class frmOscilloscope
         Me.gbChannel3.Controls.Add(Me.Label10)
         Me.gbChannel3.Controls.Add(Me.Label12)
         Me.gbChannel3.Controls.Add(Me.cmbCOM3)
-        Me.gbChannel3.Location = New System.Drawing.Point(12, 349)
+        Me.gbChannel3.Location = New System.Drawing.Point(12, 195)
         Me.gbChannel3.Name = "gbChannel3"
-        Me.gbChannel3.Size = New System.Drawing.Size(227, 156)
+        Me.gbChannel3.Size = New System.Drawing.Size(227, 89)
         Me.gbChannel3.TabIndex = 15
         Me.gbChannel3.TabStop = False
         Me.gbChannel3.Text = "Channel 3"
         '
         'nudZeroLine3
         '
+        Me.nudZeroLine3.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.nudZeroLine3.DecimalPlaces = 2
         Me.nudZeroLine3.Location = New System.Drawing.Point(83, 49)
         Me.nudZeroLine3.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
@@ -125,6 +145,8 @@ Partial Class frmOscilloscope
         '
         'cmbCOM3
         '
+        Me.cmbCOM3.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cmbCOM3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cmbCOM3.FormattingEnabled = True
         Me.cmbCOM3.Location = New System.Drawing.Point(83, 22)
@@ -140,9 +162,9 @@ Partial Class frmOscilloscope
         Me.gbChannel2.Controls.Add(Me.nudZeroLine2)
         Me.gbChannel2.Controls.Add(Me.Label9)
         Me.gbChannel2.Controls.Add(Me.cmbCOM2)
-        Me.gbChannel2.Location = New System.Drawing.Point(12, 178)
+        Me.gbChannel2.Location = New System.Drawing.Point(12, 101)
         Me.gbChannel2.Name = "gbChannel2"
-        Me.gbChannel2.Size = New System.Drawing.Size(227, 165)
+        Me.gbChannel2.Size = New System.Drawing.Size(227, 88)
         Me.gbChannel2.TabIndex = 14
         Me.gbChannel2.TabStop = False
         Me.gbChannel2.Text = "Channel 2"
@@ -158,6 +180,8 @@ Partial Class frmOscilloscope
         '
         'nudZeroLine2
         '
+        Me.nudZeroLine2.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.nudZeroLine2.DecimalPlaces = 2
         Me.nudZeroLine2.Location = New System.Drawing.Point(83, 49)
         Me.nudZeroLine2.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
@@ -177,6 +201,8 @@ Partial Class frmOscilloscope
         '
         'cmbCOM2
         '
+        Me.cmbCOM2.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cmbCOM2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cmbCOM2.FormattingEnabled = True
         Me.cmbCOM2.Location = New System.Drawing.Point(83, 22)
@@ -188,17 +214,13 @@ Partial Class frmOscilloscope
         '
         Me.gbChannel1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.gbChannel1.Controls.Add(Me.btnUpdateName)
-        Me.gbChannel1.Controls.Add(Me.txtName)
         Me.gbChannel1.Controls.Add(Me.Label6)
         Me.gbChannel1.Controls.Add(Me.cmbCOM1)
-        Me.gbChannel1.Controls.Add(Me.nudTrigger1)
-        Me.gbChannel1.Controls.Add(Me.lblTrigger1)
         Me.gbChannel1.Controls.Add(Me.nudZeroLine1)
         Me.gbChannel1.Controls.Add(Me.Label4)
         Me.gbChannel1.Location = New System.Drawing.Point(12, 12)
         Me.gbChannel1.Name = "gbChannel1"
-        Me.gbChannel1.Size = New System.Drawing.Size(227, 160)
+        Me.gbChannel1.Size = New System.Drawing.Size(227, 83)
         Me.gbChannel1.TabIndex = 12
         Me.gbChannel1.TabStop = False
         Me.gbChannel1.Text = "Primary Channel"
@@ -214,6 +236,8 @@ Partial Class frmOscilloscope
         '
         'cmbCOM1
         '
+        Me.cmbCOM1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cmbCOM1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cmbCOM1.FormattingEnabled = True
         Me.cmbCOM1.Location = New System.Drawing.Point(83, 22)
@@ -221,18 +245,20 @@ Partial Class frmOscilloscope
         Me.cmbCOM1.Size = New System.Drawing.Size(120, 21)
         Me.cmbCOM1.TabIndex = 0
         '
-        'nudTrigger1
+        'nudVTrigger
         '
-        Me.nudTrigger1.DecimalPlaces = 2
-        Me.nudTrigger1.Location = New System.Drawing.Point(83, 129)
-        Me.nudTrigger1.Name = "nudTrigger1"
-        Me.nudTrigger1.Size = New System.Drawing.Size(120, 20)
-        Me.nudTrigger1.TabIndex = 7
+        Me.nudVTrigger.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.nudVTrigger.DecimalPlaces = 2
+        Me.nudVTrigger.Location = New System.Drawing.Point(77, 45)
+        Me.nudVTrigger.Name = "nudVTrigger"
+        Me.nudVTrigger.Size = New System.Drawing.Size(132, 20)
+        Me.nudVTrigger.TabIndex = 7
         '
         'lblTrigger1
         '
         Me.lblTrigger1.AutoSize = True
-        Me.lblTrigger1.Location = New System.Drawing.Point(7, 131)
+        Me.lblTrigger1.Location = New System.Drawing.Point(5, 47)
         Me.lblTrigger1.Name = "lblTrigger1"
         Me.lblTrigger1.Size = New System.Drawing.Size(40, 13)
         Me.lblTrigger1.TabIndex = 6
@@ -240,6 +266,8 @@ Partial Class frmOscilloscope
         '
         'nudZeroLine1
         '
+        Me.nudZeroLine1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.nudZeroLine1.DecimalPlaces = 2
         Me.nudZeroLine1.Location = New System.Drawing.Point(83, 49)
         Me.nudZeroLine1.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
@@ -260,34 +288,171 @@ Partial Class frmOscilloscope
         '
         'chtOscilloscope
         '
-        ChartArea1.AxisX.IsStartedFromZero = False
-        ChartArea1.AxisY.IsStartedFromZero = False
-        ChartArea1.Name = "ChartArea1"
-        Me.chtOscilloscope.ChartAreas.Add(ChartArea1)
+        ChartArea7.AxisX.IsStartedFromZero = False
+        ChartArea7.AxisY.IsStartedFromZero = False
+        ChartArea7.Name = "ChartArea1"
+        Me.chtOscilloscope.ChartAreas.Add(ChartArea7)
         Me.chtOscilloscope.Dock = System.Windows.Forms.DockStyle.Fill
-        Legend1.Name = "Legend1"
-        Me.chtOscilloscope.Legends.Add(Legend1)
+        Legend7.Name = "Legend1"
+        Me.chtOscilloscope.Legends.Add(Legend7)
         Me.chtOscilloscope.Location = New System.Drawing.Point(0, 0)
         Me.chtOscilloscope.Name = "chtOscilloscope"
         Me.chtOscilloscope.Size = New System.Drawing.Size(829, 760)
         Me.chtOscilloscope.TabIndex = 3
         Me.chtOscilloscope.Text = "Oscilloscope"
         '
-        'txtName
+        'gbConfiguration
         '
-        Me.txtName.Location = New System.Drawing.Point(10, 98)
-        Me.txtName.Name = "txtName"
-        Me.txtName.Size = New System.Drawing.Size(74, 20)
-        Me.txtName.TabIndex = 11
+        Me.gbConfiguration.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.gbConfiguration.Controls.Add(Me.gbChangeParams)
+        Me.gbConfiguration.Controls.Add(Me.GroupBox1)
+        Me.gbConfiguration.Controls.Add(Me.Label1)
+        Me.gbConfiguration.Controls.Add(Me.cmbTriggerChannel)
+        Me.gbConfiguration.Location = New System.Drawing.Point(12, 290)
+        Me.gbConfiguration.Name = "gbConfiguration"
+        Me.gbConfiguration.Size = New System.Drawing.Size(227, 283)
+        Me.gbConfiguration.TabIndex = 17
+        Me.gbConfiguration.TabStop = False
+        Me.gbConfiguration.Text = "Configuration"
+        '
+        'Button1
+        '
+        Me.Button1.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.Button1.Location = New System.Drawing.Point(130, 725)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(109, 23)
+        Me.Button1.TabIndex = 18
+        Me.Button1.Text = "Lock"
+        Me.Button1.UseVisualStyleBackColor = True
+        '
+        'cmbTriggerChannel
+        '
+        Me.cmbTriggerChannel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.cmbTriggerChannel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbTriggerChannel.FormattingEnabled = True
+        Me.cmbTriggerChannel.Location = New System.Drawing.Point(58, 24)
+        Me.cmbTriggerChannel.Name = "cmbTriggerChannel"
+        Me.cmbTriggerChannel.Size = New System.Drawing.Size(163, 21)
+        Me.cmbTriggerChannel.TabIndex = 0
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(5, 74)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(29, 13)
+        Me.Label2.TabIndex = 10
+        Me.Label2.Text = "Gain"
+        '
+        'cmbGain
+        '
+        Me.cmbGain.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.cmbGain.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cmbGain.FormattingEnabled = True
+        Me.cmbGain.Location = New System.Drawing.Point(77, 71)
+        Me.cmbGain.Name = "cmbGain"
+        Me.cmbGain.Size = New System.Drawing.Size(132, 21)
+        Me.cmbGain.TabIndex = 11
+        '
+        'nudTimeDivision
+        '
+        Me.nudTimeDivision.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.nudTimeDivision.Location = New System.Drawing.Point(77, 19)
+        Me.nudTimeDivision.Name = "nudTimeDivision"
+        Me.nudTimeDivision.Size = New System.Drawing.Size(132, 20)
+        Me.nudTimeDivision.TabIndex = 12
+        '
+        'Label3
+        '
+        Me.Label3.AutoSize = True
+        Me.Label3.Location = New System.Drawing.Point(5, 21)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(68, 13)
+        Me.Label3.TabIndex = 13
+        Me.Label3.Text = "Time Divsion"
         '
         'btnUpdateName
         '
-        Me.btnUpdateName.Location = New System.Drawing.Point(90, 98)
+        Me.btnUpdateName.Location = New System.Drawing.Point(8, 45)
         Me.btnUpdateName.Name = "btnUpdateName"
-        Me.btnUpdateName.Size = New System.Drawing.Size(113, 23)
-        Me.btnUpdateName.TabIndex = 12
+        Me.btnUpdateName.Size = New System.Drawing.Size(201, 23)
+        Me.btnUpdateName.TabIndex = 15
         Me.btnUpdateName.Text = "Update Name"
         Me.btnUpdateName.UseVisualStyleBackColor = True
+        '
+        'txtName
+        '
+        Me.txtName.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtName.Location = New System.Drawing.Point(77, 19)
+        Me.txtName.Name = "txtName"
+        Me.txtName.Size = New System.Drawing.Size(132, 20)
+        Me.txtName.TabIndex = 14
+        '
+        'btnUpdateParameters
+        '
+        Me.btnUpdateParameters.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnUpdateParameters.Location = New System.Drawing.Point(8, 98)
+        Me.btnUpdateParameters.Name = "btnUpdateParameters"
+        Me.btnUpdateParameters.Size = New System.Drawing.Size(201, 23)
+        Me.btnUpdateParameters.TabIndex = 16
+        Me.btnUpdateParameters.Text = "Update Parameters"
+        Me.btnUpdateParameters.UseVisualStyleBackColor = True
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(11, 27)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(41, 13)
+        Me.Label1.TabIndex = 9
+        Me.Label1.Text = "Device"
+        '
+        'GroupBox1
+        '
+        Me.GroupBox1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.GroupBox1.Controls.Add(Me.Label5)
+        Me.GroupBox1.Controls.Add(Me.txtName)
+        Me.GroupBox1.Controls.Add(Me.btnUpdateName)
+        Me.GroupBox1.Location = New System.Drawing.Point(6, 199)
+        Me.GroupBox1.Name = "GroupBox1"
+        Me.GroupBox1.Size = New System.Drawing.Size(215, 78)
+        Me.GroupBox1.TabIndex = 17
+        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.Text = "Update Name"
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(14, 22)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(40, 13)
+        Me.Label5.TabIndex = 15
+        Me.Label5.Text = "Trigger"
+        '
+        'gbChangeParams
+        '
+        Me.gbChangeParams.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.gbChangeParams.Controls.Add(Me.nudTimeDivision)
+        Me.gbChangeParams.Controls.Add(Me.lblTrigger1)
+        Me.gbChangeParams.Controls.Add(Me.btnUpdateParameters)
+        Me.gbChangeParams.Controls.Add(Me.nudVTrigger)
+        Me.gbChangeParams.Controls.Add(Me.Label3)
+        Me.gbChangeParams.Controls.Add(Me.Label2)
+        Me.gbChangeParams.Controls.Add(Me.cmbGain)
+        Me.gbChangeParams.Location = New System.Drawing.Point(6, 62)
+        Me.gbChangeParams.Name = "gbChangeParams"
+        Me.gbChangeParams.Size = New System.Drawing.Size(215, 131)
+        Me.gbChangeParams.TabIndex = 18
+        Me.gbChangeParams.TabStop = False
+        Me.gbChangeParams.Text = "Update Parameters"
         '
         'frmOscilloscope
         '
@@ -307,9 +472,16 @@ Partial Class frmOscilloscope
         CType(Me.nudZeroLine2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.gbChannel1.ResumeLayout(False)
         Me.gbChannel1.PerformLayout()
-        CType(Me.nudTrigger1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.nudVTrigger, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.nudZeroLine1, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.chtOscilloscope, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.gbConfiguration.ResumeLayout(False)
+        Me.gbConfiguration.PerformLayout()
+        CType(Me.nudTimeDivision, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.GroupBox1.ResumeLayout(False)
+        Me.GroupBox1.PerformLayout()
+        Me.gbChangeParams.ResumeLayout(False)
+        Me.gbChangeParams.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -318,7 +490,7 @@ Partial Class frmOscilloscope
     Friend WithEvents cmbCOM3 As System.Windows.Forms.ComboBox
     Friend WithEvents cmbCOM2 As System.Windows.Forms.ComboBox
     Friend WithEvents cmbCOM1 As System.Windows.Forms.ComboBox
-    Friend WithEvents nudTrigger1 As System.Windows.Forms.NumericUpDown
+    Friend WithEvents nudVTrigger As System.Windows.Forms.NumericUpDown
     Friend WithEvents lblTrigger1 As System.Windows.Forms.Label
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents nudZeroLine1 As System.Windows.Forms.NumericUpDown
@@ -333,6 +505,18 @@ Partial Class frmOscilloscope
     Friend WithEvents Label9 As System.Windows.Forms.Label
     Friend WithEvents Label6 As System.Windows.Forms.Label
     Friend WithEvents btnClearGraph As System.Windows.Forms.Button
-    Friend WithEvents btnUpdateName As System.Windows.Forms.Button
+    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents gbConfiguration As System.Windows.Forms.GroupBox
+    Friend WithEvents cmbTriggerChannel As System.Windows.Forms.ComboBox
+    Friend WithEvents cmbGain As System.Windows.Forms.ComboBox
+    Friend WithEvents Label2 As System.Windows.Forms.Label
+    Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
+    Friend WithEvents Label5 As System.Windows.Forms.Label
     Friend WithEvents txtName As System.Windows.Forms.TextBox
+    Friend WithEvents btnUpdateName As System.Windows.Forms.Button
+    Friend WithEvents btnUpdateParameters As System.Windows.Forms.Button
+    Friend WithEvents Label3 As System.Windows.Forms.Label
+    Friend WithEvents nudTimeDivision As System.Windows.Forms.NumericUpDown
+    Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents gbChangeParams As System.Windows.Forms.GroupBox
 End Class
