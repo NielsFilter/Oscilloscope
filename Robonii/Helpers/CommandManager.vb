@@ -27,9 +27,8 @@
         lstBytes.Add(BaseCommand.StartByte2)
 
         'Packet Type
-        '// Out PacketTypes enum holds the possible packet types. The enum value is the integer representation of the hex value.
-        Dim packetType As Integer = cmd.PacketType
-        lstBytes.Add(Utils.ToByte(packetType))
+        '// PacketTypes enum holds the possible packet types. The enum value holds the correct packet type integer value
+        lstBytes.Add(cmd.PacketType)
 
         'Name
         '// The validation to limit the name is in the BaseCommand class.
@@ -37,32 +36,35 @@
         lstBytes.AddRange(Utils.ASCIIToBytes(cmd.DeviceName))
 
         'Time Division Param
-        lstBytes.Add(Utils.ToByte(cmd.TimeDivision))
+        lstBytes.Add(cmd.TimeDivision)
 
         'VTrigger
-        lstBytes.Add(Utils.ToByte(cmd.VTrigger))
+        lstBytes.Add(cmd.VTrigger)
 
         'Time Division Param
-        lstBytes.Add(Utils.ToByte(cmd.TimeDivision))
+        lstBytes.Add(cmd.TimeDivision)
 
         'Data Packet Number
-        lstBytes.Add(Utils.ToByte(cmd.PacketNumber))
+        lstBytes.Add(cmd.PacketNumber)
 
         'Data Packet Total
-        lstBytes.Add(Utils.ToByte(cmd.TotalPackets))
+        lstBytes.Add(cmd.TotalPackets)
+
+        '// CommandType enum holds the possible commands. The enum value holds the correct command integer value.
+        lstBytes.Add(cmd.Command)
 
         'Data Stream Length
         '// Take the DataStreamLength property and convert it to Byte array (We need an array as the 2 bytes are allocated for this number)
-        '// Once we have the byte array, we call Array.Resize to make sure the Byte array is 2 bytes long. (If integer is small, the second byte will be empty).
-        Dim dataStreamBytes As Byte() = Utils.ToBytes(cmd.DataStreamLength)
-        Array.Resize(dataStreamBytes, BaseCommand.DATASTREAMBYTE_LENGTH)
-        lstBytes.AddRange(dataStreamBytes)
+        Dim dataStreamBytes As Byte() = Utils.ToBytes(cmd.DataStreamLength, BaseCommand.DATASTREAMBYTE_LENGTH)
+        lstBytes.AddRange(dataStreamBytes.Reverse()) '// Call Reverse, since the High byte must come first, but in the above array, the Low byte is first.
 
         'Data Stream Position
         '// See explanation as 'Data Stream Length' above.
-        Dim dataStreamPositionBytes As Byte() = Utils.ToBytes(cmd.DataStreamPosition)
-        Array.Resize(dataStreamPositionBytes, BaseCommand.DATASTREAMBYTE_LENGTH)
-        lstBytes.AddRange(dataStreamPositionBytes)
+        Dim dataStreamPositionBytes As Byte() = Utils.ToBytes(cmd.DataStreamPosition, BaseCommand.DATASTREAMBYTE_LENGTH)
+        lstBytes.AddRange(dataStreamPositionBytes.Reverse()) '// Call Reverse, since the High byte must come first, but in the above array, the Low byte is first.
+
+        '// Set Header Bytes (This is needed to calculate CRC Header)
+        cmd.HeaderBytes = lstBytes
 
         'CRC Header
         '// Automatically calculated in the BaseCommand class.
@@ -76,6 +78,9 @@
         'Data
         '// This is the actual Command Data.
         lstBytes.AddRange(cmd.Data)
+
+        '// Set All Bytes (This is needed to calculate CRC Data)
+        cmd.AllBytes = lstBytes
 
         'CRC Data
         '// Automatically calculated in the BaseCommand class.
@@ -115,28 +120,30 @@
                     End If
 
                     '// Since we only instantiate the command here, now we can do the checksum for the start bytes and packet type byte.
-                    cmd.XorData = &H0
-                    cmd.CalculateCRC({BaseCommand.StartByte1, BaseCommand.StartByte2, currentByte})
+                    cmd.HeaderBytes = New List(Of Byte)()
+                    cmd.AllBytes = New List(Of Byte)()
+                    cmd.AddHeaderBytes(BaseCommand.StartByte1, BaseCommand.StartByte2, currentByte)
+
                     offset += 1
 
                 Case 3 'Device Name
                     Dim diviceNameBytes = bytes.Skip(startPosition).Take(BaseCommand.DEVICENAME_LENGTH).ToArray()
                     cmd.DeviceName = Utils.ByteToASCII(diviceNameBytes)
 
-                    cmd.CalculateCRC(diviceNameBytes)
+                    cmd.AddHeaderBytes(diviceNameBytes)
                     startPosition += BaseCommand.DEVICENAME_LENGTH - 1
                     offset += BaseCommand.DEVICENAME_LENGTH
 
                 Case 8 'Time Division Param
                     cmd.TimeDivision = currentByte
 
-                    cmd.CalculateCRC(currentByte)
+                    cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
                 Case 9 'V Trigger
                     cmd.VTrigger = currentByte
 
-                    cmd.CalculateCRC(currentByte)
+                    cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
                 Case 10 'Gain
@@ -146,7 +153,7 @@
                     End If
 
                     cmd.Gain = gain
-                    cmd.CalculateCRC(currentByte)
+                    cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
                 Case 11 'Packet Number
@@ -156,7 +163,7 @@
                         Return False '// We've received a different packet number than expected.
                     End If
 
-                    cmd.CalculateCRC(currentByte)
+                    cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
                 Case 12 'Total Packets
@@ -171,7 +178,7 @@
                         isMorePacketsToFollow = False
                     End If
 
-                    cmd.CalculateCRC(currentByte)
+                    cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
                 Case 13 'Command
@@ -180,15 +187,21 @@
                         Return False
                     End If
 
-                    cmd.Command = currentByte
-                    cmd.CalculateCRC(currentByte)
+                    '// We don't set the command. Each command type is set in stone.
+                    '// So what we do here is we check that the command type that we have is correct according to the current command we're building.
+                    '// If it's not, chuck it out. If it is, simply carry on.
+                    If cmd.Command <> currentByte Then
+                        Return False
+                    End If
+
+                    cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
                 Case 14 'Data Stream Length
                     Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
                     cmd.DataStreamLength = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
 
-                    cmd.CalculateCRC({currentByte, nextByte}) '// We pass the 2 Data Stream Length bytes as an array
+                    cmd.AddHeaderBytes(currentByte, nextByte) '// We pass the 2 Data Stream Length bytes as an array
                     offset += BaseCommand.DATASTREAMBYTE_LENGTH
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
 
@@ -196,18 +209,17 @@
                     Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
                     cmd.DataStreamPosition = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
 
-                    cmd.CalculateCRC({currentByte, nextByte}) '// We pass the 2 Data Stream Position bytes as an array
+                    cmd.AddHeaderBytes(currentByte, nextByte) '// We pass the 2 Data Stream Position bytes as an array
                     startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
                     offset += BaseCommand.DATASTREAMBYTE_LENGTH
 
                 Case 18 ' CRC Header
-                    cmd.CRCHeader = currentByte
-                    If cmd.CRCHeader <> cmd.XorData Then
+                    If cmd.CRCHeader <> currentByte Then
                         'Invalid CRC Header, cannot trust data.
                         Return False
                     End If
 
-                    cmd.CalculateCRC(currentByte)
+                    cmd.AddBodyBytes(currentByte)
                     offset += 1
 
                     '// Data and CRC header
@@ -226,7 +238,7 @@
                         For Each b In dataByteArr
                             cmd.Data.Add(b)
 
-                            cmd.CalculateCRC(b)
+                            cmd.AddBodyBytes(b)
                             offset += 1
                         Next
 
@@ -234,8 +246,7 @@
 
                     ElseIf offset = crcDataIndex Then
                         '// CRC Data
-                        cmd.CRCData = currentByte
-                        If cmd.CRCData <> cmd.XorData Then
+                        If cmd.CRCData <> currentByte Then
                             'Invalid CRC Data, cannot trust data.
                             Return False
                         End If
@@ -259,4 +270,11 @@
         End Try
     End Function
 
+    Public Shared Function CalculateCRC(bytes As List(Of Byte)) As Byte
+        Dim checkSum As Byte = 0
+        For Each b In bytes
+            checkSum = checkSum Xor b '// Apply XOR
+        Next
+        Return checkSum
+    End Function
 End Class

@@ -17,7 +17,7 @@
 #Region " Protocol Properties "
 
     '2: Packet Type
-    Public MustOverride ReadOnly Property PacketType As PacketTypes
+    Public Overridable Property PacketType As PacketTypes
 
     '3 - 7: Device Name
     Private _deviceName As String = New String(" ", DEVICENAME_LENGTH)
@@ -89,15 +89,7 @@
     End Property
 
     '13: Command
-    Private _command As CommandTypes
-    Public Property Command As CommandTypes
-        Get
-            Return Me._command
-        End Get
-        Set(value As CommandTypes)
-            Me._command = value
-        End Set
-    End Property
+    Public MustOverride ReadOnly Property Command As CommandTypes
 
     '14 - 15: Data Stream Length
     Private _dataStreamLength As Integer
@@ -132,14 +124,10 @@
     End Property
 
     '18: CRC Header
-    Private _crcHeader As Byte
-    Public Property CRCHeader As Byte
+    Public ReadOnly Property CRCHeader As Byte
         Get
-            Return Me._crcHeader
+            Return CommandManager.CalculateCRC(Me.HeaderBytes)
         End Get
-        Set(value As Byte)
-            Me._crcHeader = value
-        End Set
     End Property
 
     '19 - n: Data
@@ -154,30 +142,26 @@
     End Property
 
     'n + 1: CRC Data
-    Private _crcData As Byte
-    Public Property CRCData As Byte
+    Public ReadOnly Property CRCData As Byte
         Get
-            Return Me._crcData
+            Return CommandManager.CalculateCRC(Me.AllBytes)
         End Get
-        Set(value As Byte)
-            Me._crcData = value
-        End Set
     End Property
 
 #End Region
 
 #Region " Checksum (CRC) "
 
-    Public Property XorData As Byte
+    Public Property HeaderBytes As List(Of Byte)
+    Public Property AllBytes As List(Of Byte)
 
-    Public Sub CalculateCRC(b As Byte)
-        XorData = XorData Xor b '// Apply XOR
+    Public Sub AddHeaderBytes(ParamArray b As Byte())
+        Me.HeaderBytes.AddRange(b)
+        Me.AllBytes.AddRange(b)
     End Sub
 
-    Public Sub CalculateCRC(bytes As Byte())
-        For Each b In bytes
-            CalculateCRC(b)
-        Next
+    Public Sub AddBodyBytes(ParamArray b As Byte())
+        Me.AllBytes.AddRange(b)
     End Sub
 
 #End Region

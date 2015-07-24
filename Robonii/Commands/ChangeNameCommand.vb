@@ -1,9 +1,9 @@
 ﻿Public Class ChangeNameCommand
     Inherits BaseCommand
 
-    Public Overrides ReadOnly Property PacketType As PacketTypes
+    Public Overrides ReadOnly Property Command As CommandTypes
         Get
-            Return PacketTypes.None
+            Return CommandTypes.ChangeName
         End Get
     End Property
 
@@ -12,7 +12,8 @@
             Throw New ArgumentException("Device name must be " & BaseCommand.DEVICENAME_LENGTH & " characters long)")
         End If
 
-        MyBase.Data = System.Text.Encoding.ASCII.GetBytes(MyBase.DeviceName.ToArray()).ToList()
+        MyBase.Data = System.Text.Encoding.ASCII.GetBytes(newDeviceName.ToArray()).ToList()
+        MyBase.DataStreamLength = MyBase.Data.Count
     End Sub
 
 End Class

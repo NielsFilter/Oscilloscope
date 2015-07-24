@@ -10,7 +10,7 @@ Robonii
 	<summary>
  Fill the Port combo boxes will all the possible COM Ports. COM Ports 0 - 99 are populated.
  </summary>
-	<remarks>"COM0" means no device connected.</remarks>
+	<remarks>"No Device" means no device is connected.</remarks>
 </member><member name="M:Robonii.frmOscilloscope.ChannelColour(System.Int32)">
 	<summary>
  Just to make it more distinguishable, we represent each channel with a colour.

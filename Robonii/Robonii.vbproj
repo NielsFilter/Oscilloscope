@@ -75,6 +75,7 @@
     <Compile Include="Commands\ChangeNameCommand.vb" />
     <Compile Include="Commands\OscilloscopeCommand.vb" />
     <Compile Include="Commands\FFTCommand.vb" />
+    <Compile Include="Devices\ConnectedDevice.vb" />
     <Compile Include="Enums\Enums.vb" />
     <Compile Include="ErrorHandling\ApplicationErrors.vb" />
     <Compile Include="frmFFT.Designer.vb">

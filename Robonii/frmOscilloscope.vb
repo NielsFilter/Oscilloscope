@@ -1,9 +1,12 @@
 ﻿Imports System.Windows.Forms.DataVisualization.Charting
+Imports System.Collections.Concurrent
+Imports System.ComponentModel
 
 Public Class frmOscilloscope
 
 #Region " Variables "
 
+    Dim isLocked As Boolean = False
     Dim isLoading As Boolean = True
     Dim suppressChangeEvent As Boolean = False
 
@@ -11,18 +14,22 @@ Public Class frmOscilloscope
 
     '// Device 1
     Private WithEvents device1 As SerialConnection
-    Private oldCOMPort1 As String = "COM0"
+    Private oldCOMPort1 As String = "No Device"
     Private oldZeroLine1 As Double = 0
 
     '// Device 2
     Private WithEvents device2 As SerialConnection
-    Private oldCOMPort2 As String = "COM0"
+    Private oldCOMPort2 As String = "No Device"
     Private oldZeroLine2 As Double = 0
 
     '// Device 3
     Private WithEvents device3 As SerialConnection
     Private oldZeroLine3 As Double = 0
-    Private oldCOMPort3 As String = "COM0"
+    Private oldCOMPort3 As String = "No Device"
+
+    '// Connected Device List
+    Private connectedDeviceList As New List(Of ConnectedDevice)
+    Private connectedDeviceLock As New Object()
 
 #End Region
 
@@ -38,10 +45,6 @@ Public Class frmOscilloscope
         Me.PopulateCOMPorts() '// COM Ports
         Me.PopulateGainTypes() '// Gain Types
 
-        '// Setup Trigger channel Combo Box
-        Me.cmbTriggerChannel.DisplayMember = "Display"
-        Me.cmbTriggerChannel.ValueMember = "COMPort"
-
         '// This variable is used so that as we set the Port Combo Boxes for instance, we don't fire the "Changed" event during a load.
         '// Initially this is true, and now that we're done loading we set it to false. See the SelectedIndexChanged methods to understand where it's used.
         Me.isLoading = False
@@ -50,13 +53,14 @@ Public Class frmOscilloscope
     ''' <summary>
     ''' Fill the Port combo boxes will all the possible COM Ports. COM Ports 0 - 99 are populated.
     ''' </summary>
-    ''' <remarks>"COM0" means no device connected.</remarks>
+    ''' <remarks>"No Device" means no device is connected.</remarks>
     Private Sub PopulateCOMPorts()
 
         Dim comPortList As New List(Of String)()
+        comPortList.Add("No Device")
         '// Loop through 0 - 99
-        For index = 0 To 99
-            '// Items built up like "COM0", "COM1", "COM2"... and stored in a list
+        For index = 1 To 99
+            '// Items built up like "COM1", "COM2"... and stored in a list
             comPortList.Add("COM" & index)
         Next
 
@@ -191,7 +195,7 @@ Public Class frmOscilloscope
     ''' Clear ALL graphs button click.
     ''' </summary>
     Private Sub btnClearGraph_Click(sender As Object, e As EventArgs) Handles btnClearGraph.Click
-        '// All we need to clear a graph is to set the selected index to 0 ("COM0").
+        '// All we need to clear a graph is to set the selected index to 0 ("No Device").
         '// The selectedIndexChanged event will fire and see that "No Port" was selected and handle the clearing.
         cmbCOM1.SelectedIndex = 0
         cmbCOM2.SelectedIndex = 0
@@ -203,7 +207,7 @@ Public Class frmOscilloscope
 #Region " COM Port Changed - Connect and Disconnect Channel Logic "
 
     '// These SelectedIndexChanged events are where we connect to the device on a COM Port and enable us to receive data.
-    '// These events also handle the "clearing" of a channel (if "COM0" is selected).
+    '// These events also handle the "clearing" of a channel (if "No Device" is selected).
 
     Private Sub COM1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbCOM1.SelectedIndexChanged
         If Me.isLoading Then
@@ -321,7 +325,7 @@ Public Class frmOscilloscope
         '// Store the current COM Port, which will be used later.
         oldCOMPort = cmbCOM.SelectedValue.ToString()
 
-        '// All of the above was just resetting everything. Now if we've selected a valid COM Port (anything but "COM0") we establish a new connection.
+        '// All of the above was just resetting everything. Now if we've selected a valid COM Port (anything but "No Device") we establish a new connection.
         If cmbCOM.SelectedIndex > 0 Then
             Me.connectDevice(device, channel, cmbCOM.SelectedValue)
         End If
@@ -362,7 +366,7 @@ Public Class frmOscilloscope
     ''' <param name="oldZeroLine">A reference to the Previous zero line.</param>
     Private Sub ShiftZeroLine(channel As Integer, cmbCOM As ComboBox, nudZeroLine As NumericUpDown, ByRef oldZeroLine As String)
         If cmbCOM.SelectedIndex = 0 Then
-            Exit Sub '// No need to go on, we're not connected ("COM0" is selected).
+            Exit Sub '// No need to go on, we're not connected ("No Device" is selected).
         End If
 
         '// Work out the shift amount. This is the new Zero line value - the old value (offset).
@@ -426,6 +430,10 @@ Public Class frmOscilloscope
     ''' </summary>
     Private Sub SomeBytesReceived(sender As SerialConnection, cmd As BaseCommand) Handles device1.CommandReceived, device2.CommandReceived, device3.CommandReceived
 
+        If Me.isLocked Then
+            Exit Sub '// Ignore data coming in, since the devices are locked
+        End If
+
         If Not TypeOf cmd Is OscilloscopeCommand Then
             Exit Sub '// Wrong command, we only care for Oscilloscope commands, since that is what we're plotting.
         End If
@@ -434,7 +442,7 @@ Public Class frmOscilloscope
         Dim oscilloscopeCmd As OscilloscopeCommand = cmd
 
         '// Check if the current device is already connected
-        Me.addConnectedDevice(New ConnectedDevice(sender.PortName, cmd.DeviceName))
+        Me.addConnectedDevice(New ConnectedDevice(sender.ChannelNo, sender.PortName, cmd.DeviceName))
 
         '// Build up a ChartData instance, which is used to plot the data.
         Dim data As New ChartData()
@@ -449,21 +457,74 @@ Public Class frmOscilloscope
 
 #End Region
 
+#Region " Connected Devices (Trigger Devices) "
+
+    Private Sub addConnectedDevice(newDevice As ConnectedDevice)
+
+        SyncLock (connectedDeviceLock)
+            If Not Me.connectedDeviceList.Any(Function(d)
+                                                  Return d.COMPort = newDevice.COMPort AndAlso d.Name = newDevice.Name
+                                              End Function) Then
+
+                Me.connectedDeviceList.Add(New ConnectedDevice(newDevice.ChannelNo, newDevice.COMPort, newDevice.Name))
+                Me.bindConnectedDeviceComboBox()
+            End If
+        End SyncLock
+    End Sub
+
+    Private Sub removeDeviceFromConnectedList(cOMPort As String)
+
+        SyncLock (connectedDeviceLock)
+            Me.connectedDeviceList.RemoveAll(Function(d) d.COMPort = cOMPort)
+            Me.bindConnectedDeviceComboBox()
+        End SyncLock
+
+    End Sub
+
+    Private Sub bindConnectedDeviceComboBox()
+
+        Dim binding As New Action(Sub()
+                                      '// Setup Trigger channel Combo Box
+                                      Me.cmbTriggerChannel.DataSource = Nothing
+                                      Me.cmbTriggerChannel.DataSource = Me.connectedDeviceList
+                                      Me.cmbTriggerChannel.DisplayMember = "Display"
+                                      Me.cmbTriggerChannel.ValueMember = "COMPort"
+                                  End Sub)
+
+        If Me.InvokeRequired Then
+            Me.Invoke(binding)
+        Else
+            binding()
+        End If
+    End Sub
+
+#End Region
+
 #Region " Sending Data to Device "
 
     ''' <summary>
     ''' Update the Device's name. Build up a ChangeNameCommand and send it.
     ''' </summary>
-    Private Sub btnUpdateName_Click(sender As Object, e As EventArgs)
-        '// Make sure that we're not on "COM0"
-        If cmbCOM1.SelectedIndex = 0 Then
+    Private Sub btnUpdateName_Click(sender As Object, e As EventArgs) Handles btnUpdateName.Click
+        '// A trigger device must be selected.
+        If Me.cmbTriggerChannel.SelectedItem Is Nothing Then
+            MessageBox.Show("Please select the device which to which the update name command should be sent.", "No trigger device selected", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        Dim triggerDevice As ConnectedDevice = Me.cmbTriggerChannel.SelectedItem
+
+        '// Make sure that we're not on "No Device"
+        If String.IsNullOrWhiteSpace(triggerDevice.COMPort) OrElse triggerDevice.COMPort = "No Device" Then
             MessageBox.Show("Please select the Port to which the name change must be sent.", "No COM Port selected", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
 
+        Dim device = getDeviceByChannel(triggerDevice.ChannelNo)
+
         '// Make sure that we're connected to a device.
-        If Me.device1 Is Nothing OrElse Me.device1.IsConnected = False Then
-            MessageBox.Show("There is no device connected on " & cmbCOM1.SelectedValue, "No device found on select port", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        If device Is Nothing OrElse device.IsConnected = False Then
+            MessageBox.Show("There is no device connected on " & triggerDevice.COMPort, "No device found on select port", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
 
@@ -474,79 +535,60 @@ Public Class frmOscilloscope
         End If
 
         Try
-            '// Done with validation, let's build the command and send it.
-            Dim cmd As New ChangeNameCommand()
+            '// Make sure that while we don't have other threads interfering with our connected device list while we're sending commands to device.
+            SyncLock (connectedDeviceLock)
 
-            cmd.DeviceName = "TIAN6"
-            cmd.DataStreamLength = 5
-            cmd.Command = CommandTypes.ChangeName
-            cmd.SetNewName(txtName.Text.Trim())
+                '// Done with validation, let's build the command and send it.
+                Dim cmd As New ChangeNameCommand()
+                cmd.DeviceName = triggerDevice.Name
+                cmd.PacketType = PacketTypes.Oscilloscope
+                cmd.SetNewName(txtName.Text.Trim())
 
-            '// Send command to the primary device.
-            device1.Send(cmd)
+                '// Send command to the device
+                device.Send(cmd)
+            End SyncLock
         Catch ex As Exception
             '// Failed to change device's name.
             MessageBox.Show(String.Format("Could not update name to '{0}'.{1}{1}{2}", txtName.Text.Trim(), Environment.NewLine, ex.Message), "Device name change failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
-
     End Sub
 
     Private Sub btnUpdateParameters_Click(sender As Object, e As EventArgs) Handles btnUpdateParameters.Click
-
+     
     End Sub
+
+    Private Function getDeviceByChannel(channelNo As Integer) As SerialConnection
+        Select Case channelNo
+            Case 1
+                Return device1
+            Case 2
+                Return device2
+            Case 3
+                Return device3
+            Case Else
+                '// This exception will only be throw in future development. If more channels are allowed one day, but the channel hasn't been added here, it will throw this exception as a reminder.
+                Throw New NotImplementedException(String.Format("Channel {0} is not implemented.", channelNo))
+        End Select
+    End Function
 
 #End Region
 
-    Private Sub addConnectedDevice(newDevice As ConnectedDevice)
-        If Not Me.cmbTriggerChannel.Items.Cast(Of ConnectedDevice)().Any(Function(d)
-                                                                             Return d.COMPort = newDevice.COMPort AndAlso d.Name = newDevice.Name
-                                                                         End Function) Then
+#Region " Locking "
 
-            '// Device is not yet in the connected list. Let's add it.
-            If Me.cmbTriggerChannel.InvokeRequired Then
-                Me.cmbTriggerChannel.Invoke(Sub()
-                                                Me.cmbTriggerChannel.Items.Add(New ConnectedDevice(newDevice.COMPort, newDevice.Name))
-                                            End Sub)
-            End If
+
+    Private Sub btnLock_Click(sender As Object, e As EventArgs) Handles btnLock.Click
+        Me.isLocked = Not Me.isLocked
+
+        If Me.isLocked Then
+            Me.btnLock.Text = "Unlock"
+            Me.lblLockedText.Visible = True
+        Else
+            Me.btnLock.Text = "Lock"
+            Me.lblLockedText.Visible = False
         End If
     End Sub
 
-    Private Sub removeDeviceFromConnectedList(cOMPort As String)
-
-        '// Remove all devices for a specific COM Port.
-        For index = 0 To Me.cmbTriggerChannel.Items.Count - 1
-            Dim device As ConnectedDevice = Me.cmbTriggerChannel.Items.Item(index)
-            If device.COMPort = cOMPort Then
-                Me.cmbTriggerChannel.Items.RemoveAt(index)
-            End If
-        Next
-
-    End Sub
-
-End Class
-
-Public Class ConnectedDevice
-
-#Region " Constructors "
-
-    Public Sub New()
-
-    End Sub
-
-    Public Sub New(cOMPort As String, name As String)
-        Me.COMPort = cOMPort
-        Me.Name = name
-    End Sub
-
 #End Region
 
-    Public Property COMPort As String
-    Public Property Name As String
-
-    Public ReadOnly Property Display As String
-        Get
-            Return Name & " (" & COMPort & ")"
-        End Get
-    End Property
-
 End Class
+

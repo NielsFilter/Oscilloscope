@@ -25,12 +25,12 @@ Public Class Utils
         Return bytArOutput
     End Function
 
-    Public Shared Function ToByte(int As Integer) As Byte
+    Public Shared Function ToHexByte(int As Integer) As Byte
         Return Convert.ToByte(int, 16)
     End Function
 
-    Public Shared Function ToBytes(int As Integer) As Byte()
-        Return BitConverter.GetBytes(int)
+    Public Shared Function ToBytes(int As Integer, Optional arraySize As Integer = 4) As Byte()
+        Return BitConverter.GetBytes(int).Take(arraySize).ToArray()
     End Function
 
     Public Shared Function ByteToASCII(bytes As Byte()) As String

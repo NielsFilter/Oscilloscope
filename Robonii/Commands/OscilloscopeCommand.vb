@@ -1,9 +1,18 @@
 ﻿Public Class OscilloscopeCommand
     Inherits BaseCommand
 
-    Public Overrides ReadOnly Property PacketType As PacketTypes
+    Public Overrides Property PacketType As PacketTypes
         Get
             Return PacketTypes.Oscilloscope
+        End Get
+        Set(value As PacketTypes)
+            Throw New NotImplementedException("Cannot change the packet type of an OscilloscopeCommand")
+        End Set
+    End Property
+
+    Public Overrides ReadOnly Property Command As CommandTypes
+        Get
+            Return CommandTypes.OscilloscopeData
         End Get
     End Property
 
