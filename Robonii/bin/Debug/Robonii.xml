@@ -43,6 +43,10 @@ Robonii
 	<summary>
  Clear ALL graphs button click.
  </summary>
+</member><member name="M:Robonii.frmOscilloscope.nudYAxis_ValueChanged(System.Object,System.EventArgs)">
+	<summary>
+ Update Y Axis Min and Max values.
+ </summary>
 </member><member name="M:Robonii.frmOscilloscope.ResetAndConnectChannel(System.Int32,Robonii.SerialConnection@,System.String@,System.Windows.Forms.NumericUpDown,System.Windows.Forms.ComboBox)">
 	<summary>
  Reset the channel and establish a connection to the selected "COM" port.

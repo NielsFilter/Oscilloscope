@@ -22,9 +22,17 @@ Partial Class frmOscilloscope
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim ChartArea4 As System.Windows.Forms.DataVisualization.Charting.ChartArea = New System.Windows.Forms.DataVisualization.Charting.ChartArea()
-        Dim Legend4 As System.Windows.Forms.DataVisualization.Charting.Legend = New System.Windows.Forms.DataVisualization.Charting.Legend()
+        Dim ChartArea1 As System.Windows.Forms.DataVisualization.Charting.ChartArea = New System.Windows.Forms.DataVisualization.Charting.ChartArea()
+        Dim CustomLabel1 As System.Windows.Forms.DataVisualization.Charting.CustomLabel = New System.Windows.Forms.DataVisualization.Charting.CustomLabel()
+        Dim Legend1 As System.Windows.Forms.DataVisualization.Charting.Legend = New System.Windows.Forms.DataVisualization.Charting.Legend()
         Me.pnlConfig = New System.Windows.Forms.Panel()
+        Me.Label13 = New System.Windows.Forms.Label()
+        Me.Label11 = New System.Windows.Forms.Label()
+        Me.nudYMax = New System.Windows.Forms.NumericUpDown()
+        Me.nudYMin = New System.Windows.Forms.NumericUpDown()
+        Me.Label8 = New System.Windows.Forms.Label()
+        Me.txtAxisXLabel = New System.Windows.Forms.TextBox()
+        Me.lblLockedText = New System.Windows.Forms.Label()
         Me.btnLock = New System.Windows.Forms.Button()
         Me.gbConfiguration = New System.Windows.Forms.GroupBox()
         Me.gbChangeParams = New System.Windows.Forms.GroupBox()
@@ -58,8 +66,9 @@ Partial Class frmOscilloscope
         Me.nudZeroLine1 = New System.Windows.Forms.NumericUpDown()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.chtOscilloscope = New System.Windows.Forms.DataVisualization.Charting.Chart()
-        Me.lblLockedText = New System.Windows.Forms.Label()
         Me.pnlConfig.SuspendLayout()
+        CType(Me.nudYMax, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.nudYMin, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbConfiguration.SuspendLayout()
         Me.gbChangeParams.SuspendLayout()
         CType(Me.nudTimeDivision, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -76,6 +85,12 @@ Partial Class frmOscilloscope
         '
         'pnlConfig
         '
+        Me.pnlConfig.Controls.Add(Me.Label13)
+        Me.pnlConfig.Controls.Add(Me.Label11)
+        Me.pnlConfig.Controls.Add(Me.nudYMax)
+        Me.pnlConfig.Controls.Add(Me.nudYMin)
+        Me.pnlConfig.Controls.Add(Me.Label8)
+        Me.pnlConfig.Controls.Add(Me.txtAxisXLabel)
         Me.pnlConfig.Controls.Add(Me.lblLockedText)
         Me.pnlConfig.Controls.Add(Me.btnLock)
         Me.pnlConfig.Controls.Add(Me.gbConfiguration)
@@ -86,13 +101,90 @@ Partial Class frmOscilloscope
         Me.pnlConfig.Dock = System.Windows.Forms.DockStyle.Right
         Me.pnlConfig.Location = New System.Drawing.Point(829, 0)
         Me.pnlConfig.Name = "pnlConfig"
-        Me.pnlConfig.Size = New System.Drawing.Size(249, 760)
+        Me.pnlConfig.Size = New System.Drawing.Size(249, 729)
         Me.pnlConfig.TabIndex = 2
+        '
+        'Label13
+        '
+        Me.Label13.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.Label13.AutoSize = True
+        Me.Label13.Location = New System.Drawing.Point(14, 614)
+        Me.Label13.Name = "Label13"
+        Me.Label13.Size = New System.Drawing.Size(89, 13)
+        Me.Label13.TabIndex = 25
+        Me.Label13.Text = "Y Axis Max Value"
+        '
+        'Label11
+        '
+        Me.Label11.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.Label11.AutoSize = True
+        Me.Label11.Location = New System.Drawing.Point(14, 588)
+        Me.Label11.Name = "Label11"
+        Me.Label11.Size = New System.Drawing.Size(86, 13)
+        Me.Label11.TabIndex = 24
+        Me.Label11.Text = "Y Axis Min Value"
+        '
+        'nudYMax
+        '
+        Me.nudYMax.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.nudYMax.DecimalPlaces = 2
+        Me.nudYMax.Location = New System.Drawing.Point(129, 612)
+        Me.nudYMax.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
+        Me.nudYMax.Minimum = New Decimal(New Integer() {1000, 0, 0, -2147483648})
+        Me.nudYMax.Name = "nudYMax"
+        Me.nudYMax.Size = New System.Drawing.Size(100, 20)
+        Me.nudYMax.TabIndex = 23
+        '
+        'nudYMin
+        '
+        Me.nudYMin.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.nudYMin.DecimalPlaces = 2
+        Me.nudYMin.Location = New System.Drawing.Point(129, 586)
+        Me.nudYMin.Maximum = New Decimal(New Integer() {1000, 0, 0, 0})
+        Me.nudYMin.Minimum = New Decimal(New Integer() {1000, 0, 0, -2147483648})
+        Me.nudYMin.Name = "nudYMin"
+        Me.nudYMin.Size = New System.Drawing.Size(100, 20)
+        Me.nudYMin.TabIndex = 22
+        '
+        'Label8
+        '
+        Me.Label8.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.Label8.AutoSize = True
+        Me.Label8.Location = New System.Drawing.Point(14, 641)
+        Me.Label8.Name = "Label8"
+        Me.Label8.Size = New System.Drawing.Size(65, 13)
+        Me.Label8.TabIndex = 21
+        Me.Label8.Text = "X Axis Label"
+        '
+        'txtAxisXLabel
+        '
+        Me.txtAxisXLabel.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtAxisXLabel.Location = New System.Drawing.Point(129, 638)
+        Me.txtAxisXLabel.Name = "txtAxisXLabel"
+        Me.txtAxisXLabel.Size = New System.Drawing.Size(100, 20)
+        Me.txtAxisXLabel.TabIndex = 20
+        Me.txtAxisXLabel.Text = "Time"
+        '
+        'lblLockedText
+        '
+        Me.lblLockedText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.lblLockedText.AutoSize = True
+        Me.lblLockedText.ForeColor = System.Drawing.Color.Red
+        Me.lblLockedText.Location = New System.Drawing.Point(0, 678)
+        Me.lblLockedText.Name = "lblLockedText"
+        Me.lblLockedText.Size = New System.Drawing.Size(245, 13)
+        Me.lblLockedText.TabIndex = 19
+        Me.lblLockedText.Text = "* Oscilloscope is locked, (incoming data is ignored)"
+        Me.lblLockedText.Visible = False
         '
         'btnLock
         '
         Me.btnLock.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnLock.Location = New System.Drawing.Point(130, 725)
+        Me.btnLock.Location = New System.Drawing.Point(129, 694)
         Me.btnLock.Name = "btnLock"
         Me.btnLock.Size = New System.Drawing.Size(109, 23)
         Me.btnLock.TabIndex = 18
@@ -165,7 +257,6 @@ Partial Class frmOscilloscope
         '
         Me.nudVTrigger.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.nudVTrigger.DecimalPlaces = 2
         Me.nudVTrigger.Location = New System.Drawing.Point(77, 45)
         Me.nudVTrigger.Name = "nudVTrigger"
         Me.nudVTrigger.Size = New System.Drawing.Size(132, 20)
@@ -244,11 +335,11 @@ Partial Class frmOscilloscope
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(11, 27)
+        Me.Label1.Location = New System.Drawing.Point(6, 27)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(41, 13)
+        Me.Label1.Size = New System.Drawing.Size(77, 13)
         Me.Label1.TabIndex = 9
-        Me.Label1.Text = "Device"
+        Me.Label1.Text = "Trigger Device"
         '
         'cmbTriggerChannel
         '
@@ -256,16 +347,16 @@ Partial Class frmOscilloscope
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.cmbTriggerChannel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.cmbTriggerChannel.FormattingEnabled = True
-        Me.cmbTriggerChannel.Location = New System.Drawing.Point(58, 24)
+        Me.cmbTriggerChannel.Location = New System.Drawing.Point(83, 24)
         Me.cmbTriggerChannel.Name = "cmbTriggerChannel"
-        Me.cmbTriggerChannel.Size = New System.Drawing.Size(163, 21)
+        Me.cmbTriggerChannel.Size = New System.Drawing.Size(138, 21)
         Me.cmbTriggerChannel.TabIndex = 0
         '
         'btnClearGraph
         '
         Me.btnClearGraph.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnClearGraph.Location = New System.Drawing.Point(13, 725)
+        Me.btnClearGraph.Location = New System.Drawing.Point(12, 694)
         Me.btnClearGraph.Name = "btnClearGraph"
         Me.btnClearGraph.Size = New System.Drawing.Size(111, 23)
         Me.btnClearGraph.TabIndex = 16
@@ -443,42 +534,33 @@ Partial Class frmOscilloscope
         '
         'chtOscilloscope
         '
-        ChartArea4.AxisX.IsStartedFromZero = False
-        ChartArea4.AxisY.IsStartedFromZero = False
-        ChartArea4.Name = "ChartArea1"
-        Me.chtOscilloscope.ChartAreas.Add(ChartArea4)
+        ChartArea1.AxisX.CustomLabels.Add(CustomLabel1)
+        ChartArea1.AxisX.IsStartedFromZero = False
+        ChartArea1.AxisY.IsStartedFromZero = False
+        ChartArea1.Name = "ChartArea1"
+        Me.chtOscilloscope.ChartAreas.Add(ChartArea1)
         Me.chtOscilloscope.Dock = System.Windows.Forms.DockStyle.Fill
-        Legend4.Name = "Legend1"
-        Me.chtOscilloscope.Legends.Add(Legend4)
+        Legend1.Name = "Legend1"
+        Me.chtOscilloscope.Legends.Add(Legend1)
         Me.chtOscilloscope.Location = New System.Drawing.Point(0, 0)
         Me.chtOscilloscope.Name = "chtOscilloscope"
-        Me.chtOscilloscope.Size = New System.Drawing.Size(829, 760)
+        Me.chtOscilloscope.Size = New System.Drawing.Size(829, 729)
         Me.chtOscilloscope.TabIndex = 3
         Me.chtOscilloscope.Text = "Oscilloscope"
-        '
-        'lblLockedText
-        '
-        Me.lblLockedText.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.lblLockedText.AutoSize = True
-        Me.lblLockedText.Location = New System.Drawing.Point(1, 709)
-        Me.lblLockedText.Name = "lblLockedText"
-        Me.lblLockedText.Size = New System.Drawing.Size(245, 13)
-        Me.lblLockedText.TabIndex = 19
-        Me.lblLockedText.Text = "* Oscilloscope is locked, (incoming data is ignored)"
-        Me.lblLockedText.Visible = False
         '
         'frmOscilloscope
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1078, 760)
+        Me.ClientSize = New System.Drawing.Size(1078, 729)
         Me.Controls.Add(Me.chtOscilloscope)
         Me.Controls.Add(Me.pnlConfig)
         Me.Name = "frmOscilloscope"
         Me.Text = "Oscilloscope"
         Me.pnlConfig.ResumeLayout(False)
         Me.pnlConfig.PerformLayout()
+        CType(Me.nudYMax, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.nudYMin, System.ComponentModel.ISupportInitialize).EndInit()
         Me.gbConfiguration.ResumeLayout(False)
         Me.gbConfiguration.PerformLayout()
         Me.gbChangeParams.ResumeLayout(False)
@@ -535,4 +617,10 @@ Partial Class frmOscilloscope
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents gbChangeParams As System.Windows.Forms.GroupBox
     Friend WithEvents lblLockedText As System.Windows.Forms.Label
+    Friend WithEvents Label8 As System.Windows.Forms.Label
+    Friend WithEvents txtAxisXLabel As System.Windows.Forms.TextBox
+    Friend WithEvents nudYMax As System.Windows.Forms.NumericUpDown
+    Friend WithEvents nudYMin As System.Windows.Forms.NumericUpDown
+    Friend WithEvents Label13 As System.Windows.Forms.Label
+    Friend WithEvents Label11 As System.Windows.Forms.Label
 End Class

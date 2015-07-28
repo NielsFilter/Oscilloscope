@@ -41,8 +41,8 @@
         'VTrigger
         lstBytes.Add(cmd.VTrigger)
 
-        'Time Division Param
-        lstBytes.Add(cmd.TimeDivision)
+        'Gain
+        lstBytes.Add(cmd.Gain)
 
         'Data Packet Number
         lstBytes.Add(cmd.PacketNumber)
@@ -126,15 +126,28 @@
 
                     offset += 1
 
-                Case 3 'Device Name
-                    Dim diviceNameBytes = bytes.Skip(startPosition).Take(BaseCommand.DEVICENAME_LENGTH).ToArray()
-                    cmd.DeviceName = Utils.ByteToASCII(diviceNameBytes)
+                Case 3 To 7 'Device Name
+                    Dim bytesToTake = BaseCommand.DEVICENAME_LENGTH - (offset - 3)
+
+                    Dim diviceNameBytes = bytes.Skip(startPosition).Take(bytesToTake).ToArray()
+                    If diviceNameBytes.Length < BaseCommand.DEVICENAME_LENGTH Then
+                        '// Name bytes are not together. Build it as we receive.
+                        '// We first get translate the part of bytes we did receive to ASCII
+                        Dim deviceNamePart = Utils.ByteToASCII(diviceNameBytes)
+                        '// Now we remove the existing bytes from the existing name (if not set, then we're simply removing spaces)
+                        Dim currentDeviceName = cmd.DeviceName.Remove(offset - 3, deviceNamePart.Length)
+                        '// Finally we insert the new ASCII part to the name and set the property.
+                        cmd.DeviceName = currentDeviceName.Insert(offset - 3, deviceNamePart)
+                    Else
+                        '// All name bytes are together, simply use them.
+                        cmd.DeviceName = Utils.ByteToASCII(diviceNameBytes)
+                    End If
 
                     cmd.AddHeaderBytes(diviceNameBytes)
-                    startPosition += BaseCommand.DEVICENAME_LENGTH - 1
-                    offset += BaseCommand.DEVICENAME_LENGTH
+                    startPosition += diviceNameBytes.Length - 1
+                    offset += diviceNameBytes.Length
 
-                Case 8 'Time Division Param
+                Case 8 'Time Division Parameter
                     cmd.TimeDivision = currentByte
 
                     cmd.AddHeaderBytes(currentByte)
@@ -197,21 +210,53 @@
                     cmd.AddHeaderBytes(currentByte)
                     offset += 1
 
-                Case 14 'Data Stream Length
-                    Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
-                    cmd.DataStreamLength = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
+                Case 14 To 15 'Data Stream Length
+                    Dim bytesToTake = IIf(offset = 14, BaseCommand.DATASTREAMBYTE_LENGTH, BaseCommand.DATASTREAMBYTE_LENGTH - 1)
+                    Dim dataStreamLengthByteArr = bytes.Skip(startPosition).Take(bytesToTake).ToArray()
 
-                    cmd.AddHeaderBytes(currentByte, nextByte) '// We pass the 2 Data Stream Length bytes as an array
-                    offset += BaseCommand.DATASTREAMBYTE_LENGTH
-                    startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
+                    If dataStreamLengthByteArr.Count = 1 Then
+                        '// Our 2 bytes are split up, then next one will be in another buffer.
+                        Dim dataStreamLengthByte = dataStreamLengthByteArr.ElementAt(0)
+                        If offset = 14 Then
+                            '// We're receiving the first one (HIGH Byte).
+                            cmd.DataStreamLength = CType(dataStreamLengthByte, Short) << 8
+                        Else
+                            '// We're receiving the second one (LOW Byte).
+                            cmd.DataStreamLength = cmd.DataStreamLength Or CType(dataStreamLengthByte, Short)
+                        End If
+                        cmd.AddHeaderBytes(dataStreamLengthByte)
+                    Else
+                        '// Both bytes are together, simply use them.
+                        cmd.DataStreamLength = CType(dataStreamLengthByteArr.ElementAt(0), Short) << 8 Or CType(dataStreamLengthByteArr.ElementAt(1), Short)
+                        cmd.AddHeaderBytes(dataStreamLengthByteArr.ElementAt(0), dataStreamLengthByteArr.ElementAt(1))  '// We pass the 2 Data Stream Length bytes as an array
+                    End If
 
-                Case 16 'Data Stream Position
-                    Dim nextByte = bytes.Skip(startPosition + BaseCommand.DATASTREAMBYTE_LENGTH - 1).First()
-                    cmd.DataStreamPosition = CType(currentByte, Short) << 8 Or CType(nextByte, Short)
+                    offset += dataStreamLengthByteArr.Length
+                    startPosition += dataStreamLengthByteArr.Length - 1
 
-                    cmd.AddHeaderBytes(currentByte, nextByte) '// We pass the 2 Data Stream Position bytes as an array
-                    startPosition += BaseCommand.DATASTREAMBYTE_LENGTH - 1
-                    offset += BaseCommand.DATASTREAMBYTE_LENGTH
+                Case 16 To 17 'Data Stream Position
+                    Dim bytesToTake = IIf(offset = 16, BaseCommand.DATASTREAMBYTE_LENGTH, BaseCommand.DATASTREAMBYTE_LENGTH - 1)
+                    Dim dataStreamPositionByteArr = bytes.Skip(startPosition).Take(bytesToTake).ToArray()
+
+                    If dataStreamPositionByteArr.Count = 1 Then
+                        '// Our 2 bytes are split up, then next one will be in another buffer.
+                        Dim dataStreamPositionByte = dataStreamPositionByteArr.ElementAt(0)
+                        If offset = 16 Then
+                            '// We're receiving the first one (HIGH Byte).
+                            cmd.DataStreamPosition = CType(dataStreamPositionByte, Short) << 8
+                        Else
+                            '// We're receiving the second one (LOW Byte).
+                            cmd.DataStreamPosition = cmd.DataStreamPosition Or CType(dataStreamPositionByte, Short)
+                        End If
+                        cmd.AddHeaderBytes(dataStreamPositionByte)
+                    Else
+                        '// Both bytes are together, simply use them.
+                        cmd.DataStreamPosition = CType(dataStreamPositionByteArr.ElementAt(0), Short) << 8 Or CType(dataStreamPositionByteArr.ElementAt(1), Short)
+                        cmd.AddHeaderBytes(dataStreamPositionByteArr.ElementAt(0), dataStreamPositionByteArr.ElementAt(1))  '// We pass the 2 Data Stream Position bytes as an array
+                    End If
+
+                    offset += dataStreamPositionByteArr.Length
+                    startPosition += dataStreamPositionByteArr.Length - 1
 
                 Case 18 ' CRC Header
                     If cmd.CRCHeader <> currentByte Then

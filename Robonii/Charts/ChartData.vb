@@ -10,4 +10,6 @@ Public Class ChartData
     Public Property COMPort As String
     Public Property Name As String
     Public Property Items As List(Of Double)
+    Public Property PacketNumber As Integer
+    Public Property TotalPackets As Integer
 End Class

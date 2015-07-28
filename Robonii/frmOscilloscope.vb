@@ -1,14 +1,16 @@
 ﻿Imports System.Windows.Forms.DataVisualization.Charting
 Imports System.Collections.Concurrent
 Imports System.ComponentModel
+Imports System.Threading
 
 Public Class frmOscilloscope
 
 #Region " Variables "
 
-    Dim isLocked As Boolean = False
-    Dim isLoading As Boolean = True
-    Dim suppressChangeEvent As Boolean = False
+    Private isClosing As Boolean = False
+    Private isLocked As Boolean = False
+    Private isLoading As Boolean = True
+    Private suppressChangeEvent As Boolean = False
 
     '// Device variables...
 
@@ -29,13 +31,17 @@ Public Class frmOscilloscope
 
     '// Connected Device List
     Private connectedDeviceList As New List(Of ConnectedDevice)
+
+    '// Locks
     Private connectedDeviceLock As New Object()
+    Private plotLock As New Object()
 
 #End Region
 
-#Region " Form Load "
+#Region " Form Load & Close "
 
     Private Sub frmOscilloscope_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
         '// Set the primary colours
         Me.gbChannel1.ForeColor = Me.ChannelColour(1)
         Me.gbChannel2.ForeColor = Me.ChannelColour(2)
@@ -45,9 +51,20 @@ Public Class frmOscilloscope
         Me.PopulateCOMPorts() '// COM Ports
         Me.PopulateGainTypes() '// Gain Types
 
+        '// Set X Axis Label
+        Me.setXAxisLabel()
+
         '// This variable is used so that as we set the Port Combo Boxes for instance, we don't fire the "Changed" event during a load.
         '// Initially this is true, and now that we're done loading we set it to false. See the SelectedIndexChanged methods to understand where it's used.
         Me.isLoading = False
+    End Sub
+
+    Private Sub frmOscilloscope_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        SyncLock (plotLock)
+            Me.disconnectDevice(device1)
+            Me.disconnectDevice(device2)
+            Me.disconnectDevice(device3)
+        End SyncLock
     End Sub
 
     ''' <summary>
@@ -86,15 +103,25 @@ Public Class frmOscilloscope
     ''' <returns>A colour for the channel number</returns>
     Private Function ChannelColour(channelNumber As Integer) As Color
         If channelNumber = 1 Then
-            Return Color.Red
+            Return Color.Purple
         ElseIf channelNumber = 2 Then
             Return Color.Green
         ElseIf channelNumber = 3 Then
-            Return Color.Orange
+            Return Color.SteelBlue
         End If
 
         Return Color.Blue
     End Function
+
+    Private Sub txtAxisXLabel_TextChanged(sender As Object, e As EventArgs) Handles txtAxisXLabel.TextChanged
+        Me.setXAxisLabel()
+    End Sub
+
+    Private Sub setXAxisLabel()
+        If Me.chtOscilloscope.ChartAreas.Count > 0 Then
+            Me.chtOscilloscope.ChartAreas(0).AxisX.Title = Me.txtAxisXLabel.Text
+        End If
+    End Sub
 
 #End Region
 
@@ -124,9 +151,19 @@ Public Class frmOscilloscope
     ''' </summary>
     ''' <param name="data">data to be plotted.</param>
     Public Sub PlotData(data As ChartData)
-        '// Add a series to plot values. A series is equivalent to a "line" in our oscilloscope.
         Dim seriesName = data.COMPort & " - " & data.Name
         Dim dataSeries As Series
+
+        Dim triggerDevice As ConnectedDevice = Me.cmbTriggerChannel.SelectedItem
+
+        '// Set Y Axis Min and Max Values
+        If chtOscilloscope.Series.Count = 0 AndAlso Me.nudYMin.Value = 0 AndAlso Me.nudYMax.Value = 0 Then
+            '// First data items comming in. Set the Y min and max.
+            Me.nudYMax.Value = data.Items.Max() + (data.Items.Max() * 0.1)
+            Me.nudYMin.Value = data.Items.Min() - Math.Abs(data.Items.Min() * 0.1)
+        End If
+
+        '// Add a series to plot values. A series is equivalent to a "line" in our oscilloscope.
         If chtOscilloscope.Series.IndexOf(seriesName) = -1 Then
             '// The series doesn't exist yet on the chart, so we'll create it.
             chtOscilloscope.Series.Add(seriesName)
@@ -134,6 +171,23 @@ Public Class frmOscilloscope
             chtOscilloscope.Series(seriesName).Tag = data.COMPort '// We store the Port in the series Tag property. The Tag property is kind of like a placeholder for extra stuff, which we can pull out later.
         End If
         dataSeries = chtOscilloscope.Series(seriesName)
+
+        If data.PacketNumber = 1 Then
+            '// New packet received. Let's check if it's from the trigger packet...
+            If data.Channel = triggerDevice.ChannelNo Then
+                '// Trigger channel new packet received. Clear all data items.
+                For Each s In chtOscilloscope.Series
+                    s.Points.Clear()
+                Next
+
+                '// Set the X Axis Width according to the Trigger channel
+                Dim maxDataPoints = data.Items.Count * data.TotalPackets
+                Me.chtOscilloscope.ChartAreas(0).AxisX.Maximum = maxDataPoints
+            Else
+                '// New packet received, but NOT from trigger channel. Only clear this channel's data.
+                dataSeries.Points.Clear()
+            End If
+        End If
 
         '// Get the last X Value for the current series.
         Dim lastXCoordinate = 0
@@ -152,17 +206,33 @@ Public Class frmOscilloscope
 
         '// Done plotting values, let's add a Zero Line (baseline) for this channel.
         '// Check if chart already has a zero line for this channel.
-        Dim zeroLine = chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag = data.Channel)
+        Dim zeroLine = chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = data.Channel.ToString())
         If zeroLine Is Nothing Then
             '// No Zero Line found, let's create one.
             zeroLine = New StripLine()
-            zeroLine.Tag = data.Channel
+            zeroLine.Tag = data.Channel.ToString()
             zeroLine.Interval = 0
             zeroLine.IntervalOffset = getZeroLineOffset(data.Channel)
             zeroLine.StripWidth = 1
             zeroLine.BackColor = ChannelColour(data.Channel)
 
             chtOscilloscope.ChartAreas(0).AxisY.StripLines.Add(zeroLine)
+        End If
+
+        If triggerDevice IsNot Nothing Then
+            Dim triggerLine = chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = "TriggerLine")
+            If triggerLine Is Nothing AndAlso Me.cmbTriggerChannel.SelectedIndex > -1 AndAlso triggerDevice.ChannelNo = data.Channel Then
+                '// No trigger line drawn. Let's try draw one.
+                triggerLine = New StripLine()
+                triggerLine.Tag = "TriggerLine"
+                triggerLine.Interval = 0
+                triggerLine.IntervalOffset = getZeroLineOffset(data.Channel) + Me.nudVTrigger.Value
+                triggerLine.StripWidth = 1
+                triggerLine.BorderDashStyle = ChartDashStyle.Dash
+                triggerLine.BorderColor = ChannelColour(data.Channel)
+
+                chtOscilloscope.ChartAreas(0).AxisY.StripLines.Add(triggerLine)
+            End If
         End If
 
         chtOscilloscope.Refresh()
@@ -200,6 +270,18 @@ Public Class frmOscilloscope
         cmbCOM1.SelectedIndex = 0
         cmbCOM2.SelectedIndex = 0
         cmbCOM3.SelectedIndex = 0
+    End Sub
+
+    ''' <summary>
+    ''' Update Y Axis Min and Max values.
+    ''' </summary>
+    Private Sub nudYAxis_ValueChanged(sender As Object, e As EventArgs) Handles nudYMin.ValueChanged, nudYMax.ValueChanged
+        Try
+            Me.chtOscilloscope.ChartAreas(0).AxisY.Minimum = Me.nudYMin.Value
+            Me.chtOscilloscope.ChartAreas(0).AxisY.Maximum = Me.nudYMax.Value
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Failed to set the Y Axis range", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
 #End Region
@@ -301,11 +383,11 @@ Public Class frmOscilloscope
         zeroLineValue.Value = 0
 
         '// Remove the "previously" connected device from the Connect List
-        Me.removeDeviceFromConnectedList(oldCOMPort)
+        Me.removeDeviceFromTriggerList(oldCOMPort)
 
         '// Remove Series for the COM Port (clear the plotted graph values for that COM Port)
         Dim comPort = oldCOMPort
-        Dim seriesList = chtOscilloscope.Series.Where(Function(s) s.Tag = comPort) '// We stored the Port for each series in the Tag property. Now we can retrieve all the Series' / Chart Lines related to the passed COM Port
+        Dim seriesList = chtOscilloscope.Series.Where(Function(s) s.Tag.ToString() = comPort.ToString()) '// We stored the Port for each series in the Tag property. Now we can retrieve all the Series' / Chart Lines related to the passed COM Port
         If seriesList.Count > 0 Then
             For Each series In seriesList.ToList()
                 '// Remove each Chart Line for this port.
@@ -314,7 +396,7 @@ Public Class frmOscilloscope
         End If
 
         '// Remove Chart Zero Line previously Plotted.
-        Dim zeroLine = Me.chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag = channel)
+        Dim zeroLine = Me.chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = channel.ToString())
         If zeroLine IsNot Nothing Then
             Me.chtOscilloscope.ChartAreas(0).AxisY.StripLines.Remove(zeroLine)
         End If
@@ -392,10 +474,21 @@ Public Class frmOscilloscope
         Next
 
         '// We've shifted the plotted values, now it's time to shift the Zero Line as well
-        Dim zeroLine = Me.chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag = channel) '// The Zero Line (which is a chart SplitLine) store its related channel in the Tag property.
+        Dim zeroLine = Me.chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = channel.ToString()) '// The Zero Line (which is a chart SplitLine) store its related channel in the Tag property.
         If zeroLine IsNot Nothing Then
             '// We've found the zero line. Now we also shift it Up or Down.
             zeroLine.IntervalOffset += shiftAmount
+        End If
+
+        '// Check if we're busy moving the items related to the trigger device.
+        Dim triggerDevice As ConnectedDevice = Me.cmbTriggerChannel.SelectedItem
+        If triggerDevice IsNot Nothing AndAlso triggerDevice.ChannelNo = channel Then
+            '// We are busy shifting the trigger channel. Let's find and shift the trigger line.
+            Dim triggerLine = Me.chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = "TriggerLine")
+            If triggerLine IsNot Nothing Then
+                '// We've found the trigger line. Now we also shift it Up or Down.
+                triggerLine.IntervalOffset += shiftAmount
+            End If
         End If
 
         '// Update the oldZeroLine variable's value to the current Zero Line value (used to calculate shift amount on next change).
@@ -419,9 +512,9 @@ Public Class frmOscilloscope
     ''' </summary>
     ''' <remarks></remarks>
     Private Sub disconnectDevice(ByRef device As SerialConnection)
-        If device1 IsNot Nothing Then
-            device1.Dispose() '// This disconnect and close stuff will be in here.
-            device1 = Nothing
+        If device IsNot Nothing Then
+            device.Dispose() '// This disconnect and close stuff will be in here.
+            device = Nothing
         End If
     End Sub
 
@@ -430,29 +523,34 @@ Public Class frmOscilloscope
     ''' </summary>
     Private Sub SomeBytesReceived(sender As SerialConnection, cmd As BaseCommand) Handles device1.CommandReceived, device2.CommandReceived, device3.CommandReceived
 
-        If Me.isLocked Then
-            Exit Sub '// Ignore data coming in, since the devices are locked
-        End If
+        SyncLock (plotLock)
+            If Me.isLocked Then
+                Exit Sub '// Ignore data coming in, since the devices are locked
+            End If
 
-        If Not TypeOf cmd Is OscilloscopeCommand Then
-            Exit Sub '// Wrong command, we only care for Oscilloscope commands, since that is what we're plotting.
-        End If
+            If Not TypeOf cmd Is OscilloscopeCommand Then
+                Exit Sub '// Wrong command, we only care for Oscilloscope commands, since that is what we're plotting.
+            End If
 
-        '// Cast the received BaseCommand to a type of OscilloscopeCommand./
-        Dim oscilloscopeCmd As OscilloscopeCommand = cmd
+            '// Cast the received BaseCommand to a type of OscilloscopeCommand./
+            Dim oscilloscopeCmd As OscilloscopeCommand = cmd
 
-        '// Check if the current device is already connected
-        Me.addConnectedDevice(New ConnectedDevice(sender.ChannelNo, sender.PortName, cmd.DeviceName))
+            '// Add the device to the connected device list (if it does not already exist there)
+            Me.addConnectedDevice(New ConnectedDevice(sender.ChannelNo, sender.PortName, oscilloscopeCmd.DeviceName))
 
-        '// Build up a ChartData instance, which is used to plot the data.
-        Dim data As New ChartData()
-        data.Channel = sender.ChannelNo
-        data.COMPort = sender.PortName
-        data.Name = oscilloscopeCmd.DeviceName
-        data.Items = oscilloscopeCmd.OscilloscopeData
+            '// Build up a ChartData instance, which is used to plot the data.
+            Dim data As New ChartData()
+            data.Channel = sender.ChannelNo
+            data.COMPort = sender.PortName
+            data.Name = oscilloscopeCmd.DeviceName
+            data.Items = oscilloscopeCmd.OscilloscopeData
+            data.PacketNumber = cmd.PacketNumber
+            data.TotalPackets = cmd.TotalPackets
 
-        '// Plot the data (import to call the PlotDataFromDifferentThreads as this method will be called from separate threads)
-        PlotDataFromDifferentThreads(data)
+            '// Plot the data (import to call the PlotDataFromDifferentThreads as this method will be called from separate threads)
+            PlotDataFromDifferentThreads(data)
+
+        End SyncLock
     End Sub
 
 #End Region
@@ -472,13 +570,19 @@ Public Class frmOscilloscope
         End SyncLock
     End Sub
 
-    Private Sub removeDeviceFromConnectedList(cOMPort As String)
-
+    Private Sub removeDeviceFromTriggerList(cOMPort As String)
         SyncLock (connectedDeviceLock)
             Me.connectedDeviceList.RemoveAll(Function(d) d.COMPort = cOMPort)
             Me.bindConnectedDeviceComboBox()
         End SyncLock
+    End Sub
 
+    Private Sub removeExceptPassedDeviceFromTriggerList(allExceptThisCOMPort As String)
+        SyncLock (connectedDeviceLock)
+            Me.connectedDeviceList.RemoveAll(Function(d) d.COMPort <> allExceptThisCOMPort)
+            Me.connectedDeviceList = New List(Of ConnectedDevice)()
+            Me.bindConnectedDeviceComboBox()
+        End SyncLock
     End Sub
 
     Private Sub bindConnectedDeviceComboBox()
@@ -489,12 +593,45 @@ Public Class frmOscilloscope
                                       Me.cmbTriggerChannel.DataSource = Me.connectedDeviceList
                                       Me.cmbTriggerChannel.DisplayMember = "Display"
                                       Me.cmbTriggerChannel.ValueMember = "COMPort"
+
+                                      '// Select the first item by default (if nothing is selected)
+                                      If Me.cmbTriggerChannel.SelectedIndex = -1 AndAlso Me.cmbTriggerChannel.Items.Count > 0 Then
+                                          Me.cmbTriggerChannel.SelectedIndex = 0
+                                      End If
+
                                   End Sub)
 
         If Me.InvokeRequired Then
             Me.Invoke(binding)
         Else
             binding()
+        End If
+    End Sub
+
+    Private Sub cmbTriggerChannel_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbTriggerChannel.SelectedIndexChanged
+        Dim triggerLine = chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = "TriggerLine")
+
+        Dim triggerDevice As ConnectedDevice = Me.cmbTriggerChannel.SelectedItem
+        If triggerDevice Is Nothing Then
+            If triggerLine IsNot Nothing Then
+                '// We don't have a trigger device. Clear the trigger line
+                chtOscilloscope.ChartAreas(0).AxisY.StripLines.Remove(triggerLine)
+            End If
+        Else
+            If triggerLine Is Nothing Then
+                '// No trigger line drawn. Let's try draw one.
+                triggerLine = New StripLine()
+                triggerLine.Tag = "TriggerLine"
+                triggerLine.Interval = 0
+                triggerLine.StripWidth = 1
+                triggerLine.BorderDashStyle = ChartDashStyle.Dash
+
+                chtOscilloscope.ChartAreas(0).AxisY.StripLines.Add(triggerLine)
+            End If
+
+            '// Set the trigger line to the VTrigger value + trigger channel's zero line offset.
+            triggerLine.IntervalOffset = getZeroLineOffset(triggerDevice.ChannelNo) + Me.nudVTrigger.Value
+            triggerLine.BorderColor = ChannelColour(triggerDevice.ChannelNo)
         End If
     End Sub
 
@@ -554,7 +691,48 @@ Public Class frmOscilloscope
     End Sub
 
     Private Sub btnUpdateParameters_Click(sender As Object, e As EventArgs) Handles btnUpdateParameters.Click
-     
+        '// A trigger device must be selected.
+        If Me.cmbTriggerChannel.SelectedItem Is Nothing Then
+            MessageBox.Show("Please select the device which to which the update parameters command should be sent.", "No trigger device selected", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        Dim triggerDevice As ConnectedDevice = Me.cmbTriggerChannel.SelectedItem
+
+        '// Make sure that we're not on "No Device"
+        If String.IsNullOrWhiteSpace(triggerDevice.COMPort) OrElse triggerDevice.COMPort = "No Device" Then
+            MessageBox.Show("Please select the Port to which the update parameter command must be sent.", "No COM Port selected", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        Dim device = getDeviceByChannel(triggerDevice.ChannelNo)
+
+        '// Make sure that we're connected to a device.
+        If device Is Nothing OrElse device.IsConnected = False Then
+            MessageBox.Show("There is no device connected on " & triggerDevice.COMPort, "No device found on select port", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        Try
+            '// Make sure that while we don't have other threads interfering with our connected device list while we're sending commands to device.
+            SyncLock (connectedDeviceLock)
+
+                '// Done with validation, let's build the command and send it.
+                Dim cmd As New ChangeParameterCommand()
+                cmd.DeviceName = triggerDevice.Name
+                cmd.PacketType = PacketTypes.Oscilloscope
+
+                cmd.TimeDivision = Me.nudTimeDivision.Value
+                cmd.VTrigger = Me.nudVTrigger.Value
+                cmd.Gain = Me.cmbGain.SelectedItem
+
+                '// Send command to the device
+                device.Send(cmd)
+            End SyncLock
+        Catch ex As Exception
+            '// Failed to change device's name.
+            MessageBox.Show(String.Format("Could not update name to '{0}'.{1}{1}{2}", txtName.Text.Trim(), Environment.NewLine, ex.Message), "Device name change failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Function getDeviceByChannel(channelNo As Integer) As SerialConnection
@@ -570,6 +748,20 @@ Public Class frmOscilloscope
                 Throw New NotImplementedException(String.Format("Channel {0} is not implemented.", channelNo))
         End Select
     End Function
+
+    Private Sub nudVTrigger_ValueChanged(sender As Object, e As EventArgs) Handles nudVTrigger.ValueChanged
+        Dim triggerLine = chtOscilloscope.ChartAreas(0).AxisY.StripLines.FirstOrDefault(Function(sl) sl.Tag.ToString() = "TriggerLine")
+        If triggerLine IsNot Nothing Then
+            '// No trigger line drawn. Let's try draw one.
+            '// Find the trigger channel...
+            Dim triggerDevice As ConnectedDevice = Me.cmbTriggerChannel.SelectedItem
+            If triggerDevice IsNot Nothing Then
+                triggerLine.IntervalOffset = getZeroLineOffset(triggerDevice.ChannelNo) + Me.nudVTrigger.Value
+
+                chtOscilloscope.Refresh()
+            End If
+        End If
+    End Sub
 
 #End Region
 

@@ -73,6 +73,7 @@
     <Compile Include="Charts\ChartData.vb" />
     <Compile Include="Commands\BaseCommand.vb" />
     <Compile Include="Commands\ChangeNameCommand.vb" />
+    <Compile Include="Commands\ChangeParameterCommand.vb" />
     <Compile Include="Commands\OscilloscopeCommand.vb" />
     <Compile Include="Commands\FFTCommand.vb" />
     <Compile Include="Devices\ConnectedDevice.vb" />

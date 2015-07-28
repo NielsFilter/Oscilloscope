@@ -9,7 +9,7 @@ Public Class SerialConnection
     Private mySerialPort As New SerialPort
     Private packetNumber As Integer
     Private offset As Integer
-    Private lock As New Object()
+    Private receiveLock As New Object()
 
 #Region " Properties "
 
@@ -81,13 +81,13 @@ Public Class SerialConnection
             Me.resetCommand()
             mySerialPort.Open()
         Catch ex As Exception
-            MessageBox.Show(String.Format("Failed to connect to device on Port '{0}'", Me.PortName), "Could not connect to device", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            MessageBox.Show(String.Format("Failed to connect to device on Port '{0}'{1}{1}{2}", Me.PortName, Environment.NewLine, ex.Message), "Could not connect to device", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
     'Read data from port when it becomes available, and send it to AppendByte and AppendString and append string Decimal
     Private Sub ReceiveSerialBytes(ByVal sender As Object, ByVal e As SerialDataReceivedEventArgs)
-        SyncLock (lock)
+        SyncLock (receiveLock)
             'Handles serial port data received events 
             Dim n As Integer = mySerialPort.BytesToRead
             Dim comBuffer As Byte() = New Byte(n - 1) {}
@@ -139,7 +139,9 @@ Public Class SerialConnection
         If Me.mySerialPort IsNot Nothing Then
             RemoveHandler mySerialPort.DataReceived, AddressOf ReceiveSerialBytes
             If Me.mySerialPort.IsOpen Then
-                Me.mySerialPort.Close()
+                SyncLock (receiveLock)
+                    Me.mySerialPort.Close()
+                End SyncLock
             End If
             Me.mySerialPort.Dispose()
         End If
