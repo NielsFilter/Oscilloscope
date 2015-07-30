@@ -93,7 +93,7 @@
 
     '14 - 15: Data Stream Length
     Private _dataStreamLength As Integer
-    Public Property DataStreamLength As Integer
+    Public Overridable Property DataStreamLength As Integer
         Get
             Return Me._dataStreamLength
         End Get

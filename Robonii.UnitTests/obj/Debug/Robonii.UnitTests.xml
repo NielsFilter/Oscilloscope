@@ -1,0 +1,44 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+Robonii.UnitTests
+</name>
+</assembly>
+<members>
+<member name="M:Robonii.UnitTests.ChangeParameterCommandTest.BuildCommand_ChangeParameter">
+	<summary>
+ Create a ChangeName command, Translate it to bytes and verify bytes are correct 
+ </summary>
+	<remarks></remarks>
+</member><member name="M:Robonii.UnitTests.OscilloscopeCommandTest.BuildCommand_ValidBytes_SingleBuffer">
+	<summary>
+ Build up an OscilloscopeCommand from a single byte array.
+ </summary>
+	<remarks></remarks>
+</member><member name="M:Robonii.UnitTests.OscilloscopeCommandTest.BuildCommand_ValidBytes_MultipleBuffers">
+	<summary>
+ Build up an OscilloscopeCommand from multiple byte arrays.
+ </summary>
+	<remarks></remarks>
+</member><member name="M:Robonii.UnitTests.ChangeNameCommandTest.BuildCommand_ChangeName">
+	<summary>
+ Create a ChangeName command, Translate it to bytes and verify bytes are correct 
+ </summary>
+	<remarks></remarks>
+</member><member name="P:Robonii.UnitTests.My.Resources.Resources.ResourceManager">
+	<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member><member name="P:Robonii.UnitTests.My.Resources.Resources.Culture">
+	<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member><member name="T:Robonii.UnitTests.My.Resources.Resources">
+	<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+</members>
+</doc>

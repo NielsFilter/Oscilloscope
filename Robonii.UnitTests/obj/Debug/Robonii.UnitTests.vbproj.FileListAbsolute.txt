@@ -1,0 +1,12 @@
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\bin\Debug\Robonii.UnitTests.dll
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\bin\Debug\Robonii.UnitTests.pdb
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\bin\Debug\Robonii.UnitTests.xml
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\bin\Debug\Robonii.exe
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\bin\Debug\Robonii.pdb
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\bin\Debug\Robonii.xml
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\obj\Debug\Robonii.UnitTests.vbprojResolveAssemblyReference.cache
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\obj\Debug\Robonii.UnitTests.Resources.resources
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\obj\Debug\Robonii.UnitTests.vbproj.GenerateResource.Cache
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\obj\Debug\Robonii.UnitTests.dll
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\obj\Debug\Robonii.UnitTests.xml
+C:\Users\nfilter\Documents\GitHub\Robonii\Robonii.UnitTests\obj\Debug\Robonii.UnitTests.pdb

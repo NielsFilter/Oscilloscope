@@ -93,12 +93,11 @@ Public Class SerialConnection
             Dim comBuffer As Byte() = New Byte(n - 1) {}
             mySerialPort.Read(comBuffer, 0, n)
 
-            For i = 0 To comBuffer.Length - 1
-                '// Current the packets
-                If Not CommandManager.BuildCommand(comBuffer, Me.incomingCmd, Me.packetNumber, i, Me.offset) Then
-                    Me.resetCommand()
-                End If
-            Next
+            '// Current the packets
+            If Not CommandManager.BuildCommand(comBuffer, Me.incomingCmd, Me.packetNumber, Me.offset) Then
+                Me.resetCommand()
+            End If
+
         End SyncLock
     End Sub
 
